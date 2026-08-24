@@ -21,7 +21,8 @@ struct SudokuBoardView: View {
                                     cell: cell,
                                     isSelected: viewModel.isSelected(cell),
                                     isPeer: viewModel.isPeerOfSelectedCell(cell),
-                                    hasSameValue: viewModel.hasSameValueAsSelectedCell(cell)
+                                    hasSameValue: viewModel.hasSameValueAsSelectedCell(cell),
+                                    isIncorrect: viewModel.isIncorrect(cell)
                                 )
                                 .frame(
                                     width: cellSize,
@@ -49,6 +50,7 @@ private struct SudokuCellView: View {
     let isSelected: Bool
     let isPeer: Bool
     let hasSameValue: Bool
+    let isIncorrect: Bool
 
     var body: some View {
         ZStack {
@@ -65,13 +67,21 @@ private struct SudokuCellView: View {
                 Text("\(value)")
                     .font(.title2)
                     .fontWeight(cell.isGiven ? .semibold : .regular)
-                    .foregroundStyle(
-                        cell.isGiven
-                        ? Color.primary
-                        : Color.accentColor
-                    )
+                    .foregroundStyle(numberColor)
             }
         }
+    }
+
+    private var numberColor: Color {
+        if cell.isGiven {
+            return .primary
+        }
+
+        if isIncorrect {
+            return .red
+        }
+
+        return .accentColor
     }
 
     private var backgroundColor: Color {

@@ -4,7 +4,15 @@ struct SudokuView: View {
     @State private var viewModel = SudokuViewModel()
 
     var body: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 16) {
+            HStack {
+                Text("Mistakes: \(viewModel.mistakeCount)")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+
+                Spacer()
+            }
+
             SudokuBoardView(
                 viewModel: viewModel
             )

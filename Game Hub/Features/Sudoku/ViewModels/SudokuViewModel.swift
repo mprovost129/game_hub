@@ -5,6 +5,7 @@ import Observation
 final class SudokuViewModel {
     var puzzle: SudokuPuzzle
     var selectedCellID: UUID?
+    var mistakeCount = 0
 
     init(puzzle: SudokuPuzzle = .testPuzzle) {
         self.puzzle = puzzle
@@ -54,6 +55,17 @@ final class SudokuViewModel {
         return selectedValue == cellValue
     }
 
+    func isIncorrect(_ cell: SudokuCell) -> Bool {
+        guard
+            !cell.isGiven,
+            let value = cell.value
+        else {
+            return false
+        }
+
+        return value != cell.solution
+    }
+
     func enterNumber(_ number: Int) {
         guard
             let selectedCellID,
@@ -66,6 +78,14 @@ final class SudokuViewModel {
 
         guard !puzzle.cells[index].isGiven else {
             return
+        }
+
+        let previousValue = puzzle.cells[index].value
+
+        // Don't count the exact same wrong entry repeatedly.
+        if previousValue != number &&
+            number != puzzle.cells[index].solution {
+            mistakeCount += 1
         }
 
         puzzle.cells[index].value = number
