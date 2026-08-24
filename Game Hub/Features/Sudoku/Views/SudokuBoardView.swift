@@ -70,7 +70,7 @@ private struct SudokuCellView: View {
                     .foregroundStyle(numberColor)
             } else if !cell.notes.isEmpty {
                 SudokuNotesView(notes: cell.notes)
-                    .padding(2)
+                    .padding(1)
             }
         }
     }
@@ -119,8 +119,10 @@ private struct SudokuNotesView: View {
                     let column = index % 3
 
                     Text("\(number)")
-                        .font(.system(size: 10))
-                        .foregroundStyle(.secondary)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(
+                            Color.primary.opacity(0.65)
+                        )
                         .frame(
                             width: cellWidth,
                             height: cellHeight
