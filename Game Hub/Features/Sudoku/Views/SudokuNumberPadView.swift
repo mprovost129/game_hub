@@ -3,11 +3,13 @@ import SwiftUI
 struct SudokuNumberPadView: View {
     let isNotesMode: Bool
     let canUndo: Bool
+    let isPaused: Bool
 
     let onNumberSelected: (Int) -> Void
     let onNotesToggle: () -> Void
     let onUndo: () -> Void
     let onErase: () -> Void
+    let onPauseToggle: () -> Void
 
     var body: some View {
         VStack(spacing: 12) {
@@ -23,6 +25,7 @@ struct SudokuNumberPadView: View {
                             .frame(height: 48)
                     }
                     .buttonStyle(.bordered)
+                    .disabled(isPaused)
                 }
             }
 
@@ -34,6 +37,7 @@ struct SudokuNumberPadView: View {
                         notesControlLabel
                     }
                     .buttonStyle(.borderedProminent)
+                    .disabled(isPaused)
                 } else {
                     Button {
                         onNotesToggle()
@@ -41,6 +45,7 @@ struct SudokuNumberPadView: View {
                         notesControlLabel
                     }
                     .buttonStyle(.bordered)
+                    .disabled(isPaused)
                 }
 
                 Button {
@@ -55,7 +60,7 @@ struct SudokuNumberPadView: View {
                     .frame(height: 52)
                 }
                 .buttonStyle(.bordered)
-                .disabled(!canUndo)
+                .disabled(!canUndo || isPaused)
 
                 Button {
                     onErase()
@@ -63,6 +68,29 @@ struct SudokuNumberPadView: View {
                     VStack(spacing: 4) {
                         Image(systemName: "eraser")
                         Text("Erase")
+                    }
+                    .font(.subheadline)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 52)
+                }
+                .buttonStyle(.bordered)
+                .disabled(isPaused)
+
+                Button {
+                    onPauseToggle()
+                } label: {
+                    VStack(spacing: 4) {
+                        Image(
+                            systemName: isPaused
+                            ? "play.fill"
+                            : "pause.fill"
+                        )
+
+                        Text(
+                            isPaused
+                            ? "Resume"
+                            : "Pause"
+                        )
                     }
                     .font(.subheadline)
                     .frame(maxWidth: .infinity)
@@ -88,6 +116,7 @@ struct SudokuNumberPadView: View {
     SudokuNumberPadView(
         isNotesMode: true,
         canUndo: true,
+        isPaused: false,
         onNumberSelected: { number in
             print(number)
         },
@@ -99,6 +128,9 @@ struct SudokuNumberPadView: View {
         },
         onErase: {
             print("Erase")
+        },
+        onPauseToggle: {
+            print("Pause")
         }
     )
     .padding()

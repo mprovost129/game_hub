@@ -130,6 +130,60 @@ struct Game_HubTests {
         #expect(!viewModel.canUndo)
     }
 
+    @Test func timerFormatsElapsedTimeAndStopsWhilePaused() {
+        let viewModel = SudokuViewModel()
+
+        for _ in 0..<65 {
+            viewModel.advanceTimer()
+        }
+
+        #expect(viewModel.elapsedSeconds == 65)
+        #expect(viewModel.formattedTime == "01:05")
+
+        viewModel.togglePause()
+        viewModel.advanceTimer()
+
+        #expect(viewModel.elapsedSeconds == 65)
+        #expect(viewModel.formattedTime == "01:05")
+    }
+
+    @Test func pausePreventsGameplayChanges() throws {
+        let viewModel = SudokuViewModel()
+        let cell = try firstEmptyCell(in: viewModel)
+
+        viewModel.selectCell(cell)
+        viewModel.toggleNotesMode()
+        viewModel.enterNumber(2)
+        viewModel.toggleNotesMode()
+        viewModel.togglePause()
+
+        viewModel.enterNumber(cell.solution)
+        viewModel.clearSelectedCell()
+        viewModel.undo()
+        viewModel.toggleNotesMode()
+
+        #expect(viewModel.selectedCell?.notes == [2])
+        #expect(viewModel.selectedCell?.value == nil)
+        #expect(viewModel.isNotesMode == false)
+        #expect(viewModel.canUndo)
+    }
+
+    @Test func pausePreventsSelectionChanges() throws {
+        let viewModel = SudokuViewModel()
+        let firstCell = try firstEmptyCell(in: viewModel)
+        let secondCell = try #require(
+            viewModel.puzzle.cells.first {
+                !$0.isGiven && $0.id != firstCell.id
+            }
+        )
+
+        viewModel.selectCell(firstCell)
+        viewModel.togglePause()
+        viewModel.selectCell(secondCell)
+
+        #expect(viewModel.selectedCellID == firstCell.id)
+    }
+
     private func firstEmptyCell(in viewModel: SudokuViewModel) throws -> SudokuCell {
         try #require(viewModel.puzzle.cells.first { !$0.isGiven })
     }

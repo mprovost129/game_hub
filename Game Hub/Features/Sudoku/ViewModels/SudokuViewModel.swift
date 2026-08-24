@@ -13,6 +13,8 @@ final class SudokuViewModel {
     var selectedCellID: UUID?
     var mistakeCount = 0
     var isNotesMode = false
+    var elapsedSeconds = 0
+    var isPaused = false
 
     private var undoStack: [SudokuSnapshot] = []
 
@@ -34,7 +36,22 @@ final class SudokuViewModel {
         !undoStack.isEmpty
     }
 
+    var formattedTime: String {
+        let minutes = elapsedSeconds / 60
+        let seconds = elapsedSeconds % 60
+
+        return String(
+            format: "%02d:%02d",
+            minutes,
+            seconds
+        )
+    }
+
     func selectCell(_ cell: SudokuCell) {
+        guard !isPaused else {
+            return
+        }
+
         selectedCellID = cell.id
     }
 
@@ -80,6 +97,10 @@ final class SudokuViewModel {
     }
 
     func enterNumber(_ number: Int) {
+        guard !isPaused else {
+            return
+        }
+
         guard
             let selectedCellID,
             let index = puzzle.cells.firstIndex(
@@ -120,6 +141,10 @@ final class SudokuViewModel {
     }
 
     func clearSelectedCell() {
+        guard !isPaused else {
+            return
+        }
+
         guard
             let selectedCellID,
             let index = puzzle.cells.firstIndex(
@@ -150,10 +175,18 @@ final class SudokuViewModel {
     }
 
     func toggleNotesMode() {
+        guard !isPaused else {
+            return
+        }
+
         isNotesMode.toggle()
     }
 
     func undo() {
+        guard !isPaused else {
+            return
+        }
+
         guard let snapshot = undoStack.popLast() else {
             return
         }
@@ -161,6 +194,18 @@ final class SudokuViewModel {
         puzzle.cells = snapshot.cells
         mistakeCount = snapshot.mistakeCount
         selectedCellID = snapshot.selectedCellID
+    }
+
+    func advanceTimer() {
+        guard !isPaused else {
+            return
+        }
+
+        elapsedSeconds += 1
+    }
+
+    func togglePause() {
+        isPaused.toggle()
     }
 
     private func saveUndoSnapshot() {
