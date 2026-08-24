@@ -19,7 +19,9 @@ struct SudokuBoardView: View {
 
                                 SudokuCellView(
                                     cell: cell,
-                                    isSelected: viewModel.isSelected(cell)
+                                    isSelected: viewModel.isSelected(cell),
+                                    isPeer: viewModel.isPeerOfSelectedCell(cell),
+                                    hasSameValue: viewModel.hasSameValueAsSelectedCell(cell)
                                 )
                                 .frame(
                                     width: cellSize,
@@ -45,15 +47,13 @@ struct SudokuBoardView: View {
 private struct SudokuCellView: View {
     let cell: SudokuCell
     let isSelected: Bool
+    let isPeer: Bool
+    let hasSameValue: Bool
 
     var body: some View {
         ZStack {
             Rectangle()
-                .fill(
-                    isSelected
-                    ? Color.accentColor.opacity(0.15)
-                    : Color.clear
-                )
+                .fill(backgroundColor)
 
             Rectangle()
                 .stroke(
@@ -72,6 +72,22 @@ private struct SudokuCellView: View {
                     )
             }
         }
+    }
+
+    private var backgroundColor: Color {
+        if isSelected {
+            return Color.accentColor.opacity(0.22)
+        }
+
+        if hasSameValue {
+            return Color.accentColor.opacity(0.14)
+        }
+
+        if isPeer {
+            return Color.accentColor.opacity(0.07)
+        }
+
+        return Color.clear
     }
 }
 

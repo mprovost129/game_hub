@@ -28,6 +28,32 @@ final class SudokuViewModel {
         selectedCellID == cell.id
     }
 
+    func isPeerOfSelectedCell(_ cell: SudokuCell) -> Bool {
+        guard let selectedCell else {
+            return false
+        }
+
+        let sameRow = cell.row == selectedCell.row
+        let sameColumn = cell.column == selectedCell.column
+
+        let sameBox =
+            cell.row / 3 == selectedCell.row / 3 &&
+            cell.column / 3 == selectedCell.column / 3
+
+        return sameRow || sameColumn || sameBox
+    }
+
+    func hasSameValueAsSelectedCell(_ cell: SudokuCell) -> Bool {
+        guard
+            let selectedValue = selectedCell?.value,
+            let cellValue = cell.value
+        else {
+            return false
+        }
+
+        return selectedValue == cellValue
+    }
+
     func enterNumber(_ number: Int) {
         guard
             let selectedCellID,
