@@ -1,8 +1,10 @@
 import SwiftUI
 
 struct SudokuNumberPadView: View {
+    let isNotesMode: Bool
     let onNumberSelected: (Int) -> Void
     let onErase: () -> Void
+    let onNotesToggle: () -> Void
 
     var body: some View {
         VStack(spacing: 12) {
@@ -21,26 +23,58 @@ struct SudokuNumberPadView: View {
                 }
             }
 
-            Button {
-                onErase()
-            } label: {
-                Label("Erase", systemImage: "eraser")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 44)
+            HStack(spacing: 12) {
+                if isNotesMode {
+                    Button {
+                        onNotesToggle()
+                    } label: {
+                        notesLabel
+                    }
+                    .buttonStyle(.borderedProminent)
+                } else {
+                    Button {
+                        onNotesToggle()
+                    } label: {
+                        notesLabel
+                    }
+                    .buttonStyle(.bordered)
+                }
+
+                Button {
+                    onErase()
+                } label: {
+                    Label("Erase", systemImage: "eraser")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 44)
+                }
+                .buttonStyle(.bordered)
             }
-            .buttonStyle(.bordered)
         }
+    }
+
+    private var notesLabel: some View {
+        Label(
+            isNotesMode ? "Notes On" : "Notes",
+            systemImage: "pencil"
+        )
+        .font(.headline)
+        .frame(maxWidth: .infinity)
+        .frame(height: 44)
     }
 }
 
 #Preview {
     SudokuNumberPadView(
+        isNotesMode: true,
         onNumberSelected: { number in
             print(number)
         },
         onErase: {
             print("Erase")
+        },
+        onNotesToggle: {
+            print("Notes")
         }
     )
     .padding()

@@ -18,11 +18,15 @@ struct SudokuView: View {
             )
 
             SudokuNumberPadView(
+                isNotesMode: viewModel.isNotesMode,
                 onNumberSelected: { number in
                     viewModel.enterNumber(number)
                 },
                 onErase: {
                     viewModel.clearSelectedCell()
+                },
+                onNotesToggle: {
+                    viewModel.toggleNotesMode()
                 }
             )
 

@@ -8,5 +8,7 @@ struct SudokuCell: Identifiable, Equatable {
     let solution: Int
 
     var value: Int?
+    var notes: Set<Int> = []
+
     let isGiven: Bool
 }

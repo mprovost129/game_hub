@@ -6,6 +6,7 @@ final class SudokuViewModel {
     var puzzle: SudokuPuzzle
     var selectedCellID: UUID?
     var mistakeCount = 0
+    var isNotesMode = false
 
     init(puzzle: SudokuPuzzle = .testPuzzle) {
         self.puzzle = puzzle
@@ -80,6 +81,11 @@ final class SudokuViewModel {
             return
         }
 
+        if isNotesMode {
+            toggleNote(number, at: index)
+            return
+        }
+
         let previousValue = puzzle.cells[index].value
 
         // Don't count the exact same wrong entry repeatedly.
@@ -89,6 +95,9 @@ final class SudokuViewModel {
         }
 
         puzzle.cells[index].value = number
+
+        // Once a final value is entered, notes are no longer needed.
+        puzzle.cells[index].notes.removeAll()
     }
 
     func clearSelectedCell() {
@@ -105,6 +114,26 @@ final class SudokuViewModel {
             return
         }
 
-        puzzle.cells[index].value = nil
+        if puzzle.cells[index].value != nil {
+            puzzle.cells[index].value = nil
+        } else {
+            puzzle.cells[index].notes.removeAll()
+        }
+    }
+
+    func toggleNotesMode() {
+        isNotesMode.toggle()
+    }
+
+    private func toggleNote(_ number: Int, at index: Int) {
+        guard puzzle.cells[index].value == nil else {
+            return
+        }
+
+        if puzzle.cells[index].notes.contains(number) {
+            puzzle.cells[index].notes.remove(number)
+        } else {
+            puzzle.cells[index].notes.insert(number)
+        }
     }
 }

@@ -68,6 +68,9 @@ private struct SudokuCellView: View {
                     .font(.title2)
                     .fontWeight(cell.isGiven ? .semibold : .regular)
                     .foregroundStyle(numberColor)
+            } else if !cell.notes.isEmpty {
+                SudokuNotesView(notes: cell.notes)
+                    .padding(2)
             }
         }
     }
@@ -98,6 +101,37 @@ private struct SudokuCellView: View {
         }
 
         return Color.clear
+    }
+}
+
+private struct SudokuNotesView: View {
+    let notes: Set<Int>
+
+    var body: some View {
+        GeometryReader { geometry in
+            let cellWidth = geometry.size.width / 3
+            let cellHeight = geometry.size.height / 3
+
+            ForEach(1...9, id: \.self) { number in
+                if notes.contains(number) {
+                    let index = number - 1
+                    let row = index / 3
+                    let column = index % 3
+
+                    Text("\(number)")
+                        .font(.system(size: 10))
+                        .foregroundStyle(.secondary)
+                        .frame(
+                            width: cellWidth,
+                            height: cellHeight
+                        )
+                        .position(
+                            x: cellWidth * CGFloat(column) + cellWidth / 2,
+                            y: cellHeight * CGFloat(row) + cellHeight / 2
+                        )
+                }
+            }
+        }
     }
 }
 
