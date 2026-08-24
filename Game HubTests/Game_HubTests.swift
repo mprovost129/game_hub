@@ -2,6 +2,41 @@ import Testing
 @testable import Game_Hub
 
 struct Game_HubTests {
+    @Test func viewModelUsesRequestedDifficulty() {
+        let viewModel = SudokuViewModel(difficulty: .hard)
+
+        #expect(viewModel.difficulty == .hard)
+        #expect(viewModel.puzzle.cells.count == 81)
+    }
+
+    @Test func puzzleInitializerBuildsExpectedCells() {
+        let puzzleValues = Array(repeating: 0, count: 80) + [9]
+        let solutionValues = Array(repeating: 1, count: 80) + [9]
+        let puzzle = SudokuPuzzle(
+            puzzle: puzzleValues,
+            solution: solutionValues
+        )
+
+        #expect(puzzle.cells.count == 81)
+        #expect(puzzle.cells[0].row == 0)
+        #expect(puzzle.cells[0].column == 0)
+        #expect(puzzle.cells[0].value == nil)
+        #expect(!puzzle.cells[0].isGiven)
+        #expect(puzzle.cells[80].row == 8)
+        #expect(puzzle.cells[80].column == 8)
+        #expect(puzzle.cells[80].value == 9)
+        #expect(puzzle.cells[80].solution == 9)
+        #expect(puzzle.cells[80].isGiven)
+    }
+
+    @Test func puzzleLibraryReturnsPuzzleForEveryDifficulty() {
+        for difficulty in SudokuDifficulty.allCases {
+            let puzzle = SudokuPuzzleLibrary.randomPuzzle(for: difficulty)
+
+            #expect(puzzle.cells.count == 81)
+        }
+    }
+
     @Test func undoRestoresCorrectNumberEntry() throws {
         let viewModel = SudokuViewModel()
         let cell = try firstEmptyCell(in: viewModel)

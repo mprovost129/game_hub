@@ -9,6 +9,7 @@ private struct SudokuSnapshot {
 
 @Observable
 final class SudokuViewModel {
+    let difficulty: SudokuDifficulty
     var puzzle: SudokuPuzzle
     var selectedCellID: UUID?
     var mistakeCount = 0
@@ -19,8 +20,13 @@ final class SudokuViewModel {
 
     private var undoStack: [SudokuSnapshot] = []
 
-    init(puzzle: SudokuPuzzle = .testPuzzle) {
-        self.puzzle = puzzle
+    init(
+        difficulty: SudokuDifficulty = .easy
+    ) {
+        self.difficulty = difficulty
+        self.puzzle = SudokuPuzzleLibrary.randomPuzzle(
+            for: difficulty
+        )
     }
 
     var selectedCell: SudokuCell? {

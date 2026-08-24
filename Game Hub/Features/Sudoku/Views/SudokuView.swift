@@ -2,21 +2,41 @@ import Combine
 import SwiftUI
 
 struct SudokuView: View {
+    let difficulty: SudokuDifficulty
+
     @Environment(\.dismiss) private var dismiss
 
-    @State private var viewModel = SudokuViewModel()
+    @State private var viewModel: SudokuViewModel
     @State private var timer = Timer.publish(
         every: 1,
         on: .main,
         in: .common
     ).autoconnect()
 
+    init(
+        difficulty: SudokuDifficulty
+    ) {
+        self.difficulty = difficulty
+
+        _viewModel = State(
+            initialValue: SudokuViewModel(
+                difficulty: difficulty
+            )
+        )
+    }
+
     var body: some View {
         VStack(spacing: 16) {
             HStack {
-                Text("Mistakes: \(viewModel.mistakeCount)")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(viewModel.difficulty.rawValue)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+
+                    Text("Mistakes: \(viewModel.mistakeCount)")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
 
                 Spacer()
 
@@ -104,6 +124,8 @@ struct SudokuView: View {
 
 #Preview {
     NavigationStack {
-        SudokuView()
+        SudokuView(
+            difficulty: .easy
+        )
     }
 }

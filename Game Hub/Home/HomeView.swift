@@ -17,7 +17,7 @@ struct HomeView: View {
                 Spacer()
 
                 NavigationLink {
-                    SudokuView()
+                    SudokuStartView()
                 } label: {
                     Text("Start Game")
                         .font(.headline)
