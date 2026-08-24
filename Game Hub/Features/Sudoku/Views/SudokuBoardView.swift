@@ -65,6 +65,11 @@ private struct SudokuCellView: View {
                 Text("\(value)")
                     .font(.title2)
                     .fontWeight(cell.isGiven ? .semibold : .regular)
+                    .foregroundStyle(
+                        cell.isGiven
+                        ? Color.primary
+                        : Color.accentColor
+                    )
             }
         }
     }

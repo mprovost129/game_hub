@@ -9,6 +9,15 @@ struct SudokuView: View {
                 viewModel: viewModel
             )
 
+            SudokuNumberPadView(
+                onNumberSelected: { number in
+                    viewModel.enterNumber(number)
+                },
+                onErase: {
+                    viewModel.clearSelectedCell()
+                }
+            )
+
             Spacer()
         }
         .padding()
