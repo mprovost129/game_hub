@@ -191,7 +191,7 @@ struct Game_HubTests {
             viewModel.advanceTimer()
         }
 
-        viewModel.debugSolvePuzzle()
+        viewModel.solvePuzzleForTesting()
         viewModel.advanceTimer()
 
         #expect(viewModel.isCompleted)
@@ -206,7 +206,7 @@ struct Game_HubTests {
         let cell = try firstEmptyCell(in: viewModel)
 
         viewModel.selectCell(cell)
-        viewModel.debugSolvePuzzle()
+        viewModel.solvePuzzleForTesting()
         viewModel.enterNumber(wrongValue(for: cell))
         viewModel.clearSelectedCell()
         viewModel.undo()

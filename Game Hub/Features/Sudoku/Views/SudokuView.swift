@@ -74,8 +74,8 @@ struct SudokuView: View {
             )
 
             #if DEBUG
-            Button("Debug Solve") {
-                viewModel.debugSolvePuzzle()
+            Button("Solve Puzzle") {
+                viewModel.solvePuzzleForTesting()
             }
             .font(.caption)
             #endif

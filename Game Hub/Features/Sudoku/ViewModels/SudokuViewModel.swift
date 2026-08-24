@@ -214,7 +214,7 @@ final class SudokuViewModel {
         isPaused.toggle()
     }
 
-    func debugSolvePuzzle() {
+    func solvePuzzleForTesting() {
         guard !isCompleted else {
             return
         }
