@@ -2,6 +2,8 @@ import Combine
 import SwiftUI
 
 struct SudokuView: View {
+    @Environment(\.dismiss) private var dismiss
+
     @State private var viewModel = SudokuViewModel()
     @State private var timer = Timer.publish(
         every: 1,
@@ -71,6 +73,13 @@ struct SudokuView: View {
                 }
             )
 
+            #if DEBUG
+            Button("Debug Solve") {
+                viewModel.debugSolvePuzzle()
+            }
+            .font(.caption)
+            #endif
+
             Spacer()
         }
         .padding()
@@ -78,6 +87,17 @@ struct SudokuView: View {
         .navigationBarTitleDisplayMode(.inline)
         .onReceive(timer) { _ in
             viewModel.advanceTimer()
+        }
+        .sheet(isPresented: $viewModel.isCompleted) {
+            SudokuCompletionView(
+                time: viewModel.formattedTime,
+                mistakes: viewModel.mistakeCount,
+                onDone: {
+                    viewModel.isCompleted = false
+                    dismiss()
+                }
+            )
+            .interactiveDismissDisabled()
         }
     }
 }

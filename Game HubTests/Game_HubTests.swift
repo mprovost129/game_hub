@@ -184,6 +184,41 @@ struct Game_HubTests {
         #expect(viewModel.selectedCellID == firstCell.id)
     }
 
+    @Test func debugSolveCompletesPuzzleAndStopsTimer() {
+        let viewModel = SudokuViewModel()
+
+        for _ in 0..<8 {
+            viewModel.advanceTimer()
+        }
+
+        viewModel.debugSolvePuzzle()
+        viewModel.advanceTimer()
+
+        #expect(viewModel.isCompleted)
+        #expect(!viewModel.isPaused)
+        #expect(viewModel.elapsedSeconds == 8)
+        #expect(viewModel.formattedTime == "00:08")
+        #expect(viewModel.puzzle.cells.allSatisfy { $0.value == $0.solution })
+    }
+
+    @Test func completionPreventsGameplayChanges() throws {
+        let viewModel = SudokuViewModel()
+        let cell = try firstEmptyCell(in: viewModel)
+
+        viewModel.selectCell(cell)
+        viewModel.debugSolvePuzzle()
+        viewModel.enterNumber(wrongValue(for: cell))
+        viewModel.clearSelectedCell()
+        viewModel.undo()
+        viewModel.toggleNotesMode()
+        viewModel.togglePause()
+
+        #expect(viewModel.isCompleted)
+        #expect(!viewModel.isPaused)
+        #expect(viewModel.isNotesMode == false)
+        #expect(viewModel.puzzle.cells.allSatisfy { $0.value == $0.solution })
+    }
+
     private func firstEmptyCell(in viewModel: SudokuViewModel) throws -> SudokuCell {
         try #require(viewModel.puzzle.cells.first { !$0.isGiven })
     }

@@ -15,6 +15,7 @@ final class SudokuViewModel {
     var isNotesMode = false
     var elapsedSeconds = 0
     var isPaused = false
+    var isCompleted = false
 
     private var undoStack: [SudokuSnapshot] = []
 
@@ -48,7 +49,7 @@ final class SudokuViewModel {
     }
 
     func selectCell(_ cell: SudokuCell) {
-        guard !isPaused else {
+        guard !isPaused, !isCompleted else {
             return
         }
 
@@ -97,7 +98,7 @@ final class SudokuViewModel {
     }
 
     func enterNumber(_ number: Int) {
-        guard !isPaused else {
+        guard !isPaused, !isCompleted else {
             return
         }
 
@@ -138,10 +139,11 @@ final class SudokuViewModel {
 
         puzzle.cells[index].value = number
         puzzle.cells[index].notes.removeAll()
+        checkForCompletion()
     }
 
     func clearSelectedCell() {
-        guard !isPaused else {
+        guard !isPaused, !isCompleted else {
             return
         }
 
@@ -175,7 +177,7 @@ final class SudokuViewModel {
     }
 
     func toggleNotesMode() {
-        guard !isPaused else {
+        guard !isPaused, !isCompleted else {
             return
         }
 
@@ -183,7 +185,7 @@ final class SudokuViewModel {
     }
 
     func undo() {
-        guard !isPaused else {
+        guard !isPaused, !isCompleted else {
             return
         }
 
@@ -197,7 +199,7 @@ final class SudokuViewModel {
     }
 
     func advanceTimer() {
-        guard !isPaused else {
+        guard !isPaused, !isCompleted else {
             return
         }
 
@@ -205,7 +207,24 @@ final class SudokuViewModel {
     }
 
     func togglePause() {
+        guard !isCompleted else {
+            return
+        }
+
         isPaused.toggle()
+    }
+
+    func debugSolvePuzzle() {
+        guard !isCompleted else {
+            return
+        }
+
+        for index in puzzle.cells.indices {
+            puzzle.cells[index].value = puzzle.cells[index].solution
+            puzzle.cells[index].notes.removeAll()
+        }
+
+        checkForCompletion()
     }
 
     private func saveUndoSnapshot() {
@@ -223,6 +242,17 @@ final class SudokuViewModel {
             puzzle.cells[index].notes.remove(number)
         } else {
             puzzle.cells[index].notes.insert(number)
+        }
+    }
+
+    private func checkForCompletion() {
+        let solved = puzzle.cells.allSatisfy { cell in
+            cell.value == cell.solution
+        }
+
+        if solved {
+            isCompleted = true
+            isPaused = false
         }
     }
 }
