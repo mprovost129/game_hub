@@ -1,13 +1,13 @@
 import SwiftUI
 
 struct SudokuView: View {
+    @State private var viewModel = SudokuViewModel()
+
     var body: some View {
         VStack(spacing: 24) {
-            Text("Sudoku")
-                .font(.largeTitle)
-                .fontWeight(.bold)
-
-            SudokuBoardView()
+            SudokuBoardView(
+                viewModel: viewModel
+            )
 
             Spacer()
         }
