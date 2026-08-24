@@ -2,9 +2,12 @@ import SwiftUI
 
 struct SudokuNumberPadView: View {
     let isNotesMode: Bool
+    let canUndo: Bool
+
     let onNumberSelected: (Int) -> Void
-    let onErase: () -> Void
     let onNotesToggle: () -> Void
+    let onUndo: () -> Void
+    let onErase: () -> Void
 
     var body: some View {
         VStack(spacing: 12) {
@@ -28,53 +31,74 @@ struct SudokuNumberPadView: View {
                     Button {
                         onNotesToggle()
                     } label: {
-                        notesLabel
+                        notesControlLabel
                     }
                     .buttonStyle(.borderedProminent)
                 } else {
                     Button {
                         onNotesToggle()
                     } label: {
-                        notesLabel
+                        notesControlLabel
                     }
                     .buttonStyle(.bordered)
                 }
 
                 Button {
+                    onUndo()
+                } label: {
+                    VStack(spacing: 4) {
+                        Image(systemName: "arrow.uturn.backward")
+                        Text("Undo")
+                    }
+                    .font(.subheadline)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 52)
+                }
+                .buttonStyle(.bordered)
+                .disabled(!canUndo)
+
+                Button {
                     onErase()
                 } label: {
-                    Label("Erase", systemImage: "eraser")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 44)
+                    VStack(spacing: 4) {
+                        Image(systemName: "eraser")
+                        Text("Erase")
+                    }
+                    .font(.subheadline)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 52)
                 }
                 .buttonStyle(.bordered)
             }
         }
     }
 
-    private var notesLabel: some View {
-        Label(
-            isNotesMode ? "Notes On" : "Notes",
-            systemImage: "pencil"
-        )
-        .font(.headline)
+    private var notesControlLabel: some View {
+        VStack(spacing: 4) {
+            Image(systemName: "pencil")
+            Text(isNotesMode ? "Notes On" : "Notes")
+        }
+        .font(.subheadline)
         .frame(maxWidth: .infinity)
-        .frame(height: 44)
+        .frame(height: 52)
     }
 }
 
 #Preview {
     SudokuNumberPadView(
         isNotesMode: true,
+        canUndo: true,
         onNumberSelected: { number in
             print(number)
         },
-        onErase: {
-            print("Erase")
-        },
         onNotesToggle: {
             print("Notes")
+        },
+        onUndo: {
+            print("Undo")
+        },
+        onErase: {
+            print("Erase")
         }
     )
     .padding()

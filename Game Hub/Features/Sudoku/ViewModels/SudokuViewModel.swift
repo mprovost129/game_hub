@@ -1,12 +1,20 @@
 import Foundation
 import Observation
 
+private struct SudokuSnapshot {
+    let cells: [SudokuCell]
+    let mistakeCount: Int
+    let selectedCellID: UUID?
+}
+
 @Observable
 final class SudokuViewModel {
     var puzzle: SudokuPuzzle
     var selectedCellID: UUID?
     var mistakeCount = 0
     var isNotesMode = false
+
+    private var undoStack: [SudokuSnapshot] = []
 
     init(puzzle: SudokuPuzzle = .testPuzzle) {
         self.puzzle = puzzle
@@ -20,6 +28,10 @@ final class SudokuViewModel {
         return puzzle.cells.first {
             $0.id == selectedCellID
         }
+    }
+
+    var canUndo: Bool {
+        !undoStack.isEmpty
     }
 
     func selectCell(_ cell: SudokuCell) {
@@ -82,21 +94,28 @@ final class SudokuViewModel {
         }
 
         if isNotesMode {
+            guard puzzle.cells[index].value == nil else {
+                return
+            }
+
+            saveUndoSnapshot()
             toggleNote(number, at: index)
             return
         }
 
         let previousValue = puzzle.cells[index].value
 
-        // Don't count the exact same wrong entry repeatedly.
-        if previousValue != number &&
-            number != puzzle.cells[index].solution {
+        guard previousValue != number else {
+            return
+        }
+
+        saveUndoSnapshot()
+
+        if number != puzzle.cells[index].solution {
             mistakeCount += 1
         }
 
         puzzle.cells[index].value = number
-
-        // Once a final value is entered, notes are no longer needed.
         puzzle.cells[index].notes.removeAll()
     }
 
@@ -114,7 +133,16 @@ final class SudokuViewModel {
             return
         }
 
-        if puzzle.cells[index].value != nil {
+        let hasValue = puzzle.cells[index].value != nil
+        let hasNotes = !puzzle.cells[index].notes.isEmpty
+
+        guard hasValue || hasNotes else {
+            return
+        }
+
+        saveUndoSnapshot()
+
+        if hasValue {
             puzzle.cells[index].value = nil
         } else {
             puzzle.cells[index].notes.removeAll()
@@ -125,11 +153,27 @@ final class SudokuViewModel {
         isNotesMode.toggle()
     }
 
-    private func toggleNote(_ number: Int, at index: Int) {
-        guard puzzle.cells[index].value == nil else {
+    func undo() {
+        guard let snapshot = undoStack.popLast() else {
             return
         }
 
+        puzzle.cells = snapshot.cells
+        mistakeCount = snapshot.mistakeCount
+        selectedCellID = snapshot.selectedCellID
+    }
+
+    private func saveUndoSnapshot() {
+        undoStack.append(
+            SudokuSnapshot(
+                cells: puzzle.cells,
+                mistakeCount: mistakeCount,
+                selectedCellID: selectedCellID
+            )
+        )
+    }
+
+    private func toggleNote(_ number: Int, at index: Int) {
         if puzzle.cells[index].notes.contains(number) {
             puzzle.cells[index].notes.remove(number)
         } else {

@@ -19,14 +19,18 @@ struct SudokuView: View {
 
             SudokuNumberPadView(
                 isNotesMode: viewModel.isNotesMode,
+                canUndo: viewModel.canUndo,
                 onNumberSelected: { number in
                     viewModel.enterNumber(number)
                 },
-                onErase: {
-                    viewModel.clearSelectedCell()
-                },
                 onNotesToggle: {
                     viewModel.toggleNotesMode()
+                },
+                onUndo: {
+                    viewModel.undo()
+                },
+                onErase: {
+                    viewModel.clearSelectedCell()
                 }
             )
 
