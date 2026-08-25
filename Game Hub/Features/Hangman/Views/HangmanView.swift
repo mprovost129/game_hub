@@ -20,6 +20,18 @@ struct HangmanView: View {
         )
     }
 
+    init(
+        savedGame: HangmanSavedGame
+    ) {
+        self.category = savedGame.game.category
+
+        _viewModel = State(
+            initialValue: HangmanViewModel(
+                savedGame: savedGame
+            )
+        )
+    }
+
     var body: some View {
         VStack(spacing: 28) {
             Spacer()
@@ -120,6 +132,7 @@ struct HangmanView: View {
                 "End Game",
                 role: .destructive
             ) {
+                viewModel.endGame()
                 dismiss()
             }
 
@@ -132,6 +145,12 @@ struct HangmanView: View {
             Text(
                 "Your current Hangman game will be lost."
             )
+        }
+        .onAppear {
+            viewModel.saveCurrentGame()
+        }
+        .onDisappear {
+            viewModel.saveCurrentGame()
         }
     }
 }

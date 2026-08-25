@@ -1,8 +1,11 @@
 import SwiftUI
 
 struct GameHubStatisticsView: View {
-    @State private var statistics =
+    @State private var sudokuStatistics =
         SudokuStatisticsStore.load()
+
+    @State private var hangmanStatistics =
+        HangmanStatisticsStore.load()
 
     var body: some View {
         NavigationStack {
@@ -10,24 +13,24 @@ struct GameHubStatisticsView: View {
                 Section("Game Hub") {
                     LabeledContent(
                         "Games Completed",
-                        value: "\(statistics.gamesCompleted)"
+                        value: "\(totalGamesCompleted)"
                     )
                 }
 
                 Section("Sudoku") {
                     LabeledContent(
                         "Easy Completed",
-                        value: "\(statistics.easyCompleted)"
+                        value: "\(sudokuStatistics.easyCompleted)"
                     )
 
                     LabeledContent(
                         "Medium Completed",
-                        value: "\(statistics.mediumCompleted)"
+                        value: "\(sudokuStatistics.mediumCompleted)"
                     )
 
                     LabeledContent(
                         "Hard Completed",
-                        value: "\(statistics.hardCompleted)"
+                        value: "\(sudokuStatistics.hardCompleted)"
                     )
 
                     NavigationLink {
@@ -39,12 +42,39 @@ struct GameHubStatisticsView: View {
                         )
                     }
                 }
+
+                Section("Hangman") {
+                    LabeledContent(
+                        "Played",
+                        value: "\(hangmanStatistics.gamesPlayed)"
+                    )
+
+                    LabeledContent(
+                        "Won",
+                        value: "\(hangmanStatistics.gamesWon)"
+                    )
+
+                    NavigationLink {
+                        HangmanStatisticsView()
+                    } label: {
+                        Label(
+                            "View Hangman Statistics",
+                            systemImage: "character.textbox"
+                        )
+                    }
+                }
             }
             .navigationTitle("Statistics")
             .onAppear {
-                statistics = SudokuStatisticsStore.load()
+                sudokuStatistics = SudokuStatisticsStore.load()
+                hangmanStatistics = HangmanStatisticsStore.load()
             }
         }
+    }
+
+    private var totalGamesCompleted: Int {
+        sudokuStatistics.gamesCompleted +
+        hangmanStatistics.gamesPlayed
     }
 }
 

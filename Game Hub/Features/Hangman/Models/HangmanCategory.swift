@@ -1,6 +1,6 @@
 import Foundation
 
-enum HangmanCategory: String, CaseIterable, Identifiable {
+enum HangmanCategory: String, CaseIterable, Identifiable, Codable {
     case animals = "Animals"
     case food = "Food"
     case places = "Places"
