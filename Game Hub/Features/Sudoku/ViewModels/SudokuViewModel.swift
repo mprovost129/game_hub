@@ -256,6 +256,15 @@ final class SudokuViewModel {
         saveGame()
     }
 
+    func pauseForInterruption() {
+        guard !isPaused, !isCompleted else {
+            return
+        }
+
+        isPaused = true
+        saveGame()
+    }
+
     func solvePuzzleForTesting() {
         guard !isCompleted else {
             return
@@ -276,12 +285,20 @@ final class SudokuViewModel {
             return
         }
 
-        let candidates = puzzle.cells.indices.filter { index in
-            !puzzle.cells[index].isGiven &&
-            puzzle.cells[index].value != puzzle.cells[index].solution
+        let selectedIndex = selectedCellID.flatMap { selectedID in
+            puzzle.cells.firstIndex { cell in
+                cell.id == selectedID &&
+                !cell.isGiven &&
+                cell.value != cell.solution
+            }
         }
 
-        guard let index = candidates.randomElement() else {
+        let fallbackIndex = puzzle.cells.indices.filter { index in
+            !puzzle.cells[index].isGiven &&
+            puzzle.cells[index].value != puzzle.cells[index].solution
+        }.randomElement()
+
+        guard let index = selectedIndex ?? fallbackIndex else {
             return
         }
 

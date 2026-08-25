@@ -162,7 +162,7 @@ struct SudokuView: View {
         }
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase != .active {
-                viewModel.saveCurrentGame()
+                viewModel.pauseForInterruption()
             }
         }
         .onAppear {

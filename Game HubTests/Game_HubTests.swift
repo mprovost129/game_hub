@@ -183,6 +183,25 @@ struct Game_HubTests {
         #expect(viewModel.formattedTime == "01:05")
     }
 
+    @Test func interruptionPausesAndSavesGame() {
+        let gameDefaults = isolatedDefaults()
+        let viewModel = makeViewModel(
+            gameDefaults: gameDefaults
+        )
+
+        viewModel.advanceTimer()
+        viewModel.pauseForInterruption()
+        viewModel.advanceTimer()
+
+        let savedGame = SudokuGameStore.load(
+            defaults: gameDefaults
+        )
+
+        #expect(viewModel.isPaused)
+        #expect(viewModel.elapsedSeconds == 1)
+        #expect(savedGame?.elapsedSeconds == 1)
+    }
+
     @Test func pausePreventsGameplayChanges() throws {
         let viewModel = makeViewModel()
         let cell = try firstEmptyCell(in: viewModel)
@@ -435,6 +454,48 @@ struct Game_HubTests {
         #expect(viewModel.hintCount == 0)
         #expect(!viewModel.canUndo)
         #expect(playableUnsolvedCount(in: viewModel) == unsolvedCount)
+    }
+
+    @Test func hintSolvesSelectedUnresolvedCellFirst() throws {
+        let viewModel = makeViewModel()
+        let cell = try firstEmptyCell(in: viewModel)
+
+        viewModel.selectCell(cell)
+        viewModel.useHint()
+
+        #expect(viewModel.selectedCellID == cell.id)
+        #expect(viewModel.selectedCell?.value == cell.solution)
+        #expect(viewModel.hintCount == 1)
+    }
+
+    @Test func hintCorrectsSelectedWrongCellFirst() throws {
+        let viewModel = makeViewModel()
+        let cell = try firstEmptyCell(in: viewModel)
+
+        viewModel.selectCell(cell)
+        viewModel.enterNumber(wrongValue(for: cell))
+        viewModel.useHint()
+
+        #expect(viewModel.selectedCellID == cell.id)
+        #expect(viewModel.selectedCell?.value == cell.solution)
+        #expect(viewModel.mistakeCount == 1)
+        #expect(viewModel.hintCount == 1)
+    }
+
+    @Test func hintFallsBackWhenSelectedCellIsGiven() throws {
+        let viewModel = makeViewModel()
+        let givenCell = try #require(
+            viewModel.puzzle.cells.first { $0.isGiven }
+        )
+        let unsolvedCount = playableUnsolvedCount(in: viewModel)
+
+        viewModel.selectCell(givenCell)
+        viewModel.useHint()
+
+        #expect(viewModel.selectedCellID != givenCell.id)
+        #expect(viewModel.selectedCell?.value == viewModel.selectedCell?.solution)
+        #expect(viewModel.hintCount == 1)
+        #expect(playableUnsolvedCount(in: viewModel) == unsolvedCount - 1)
     }
 
     @Test func hintClearsNotesWhenItFillsACell() throws {
