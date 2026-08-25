@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct HomeView: View {
+    @State private var savedSudokuGame: SudokuSavedGame?
+
     private let columns = [
         GridItem(
             .flexible(),
@@ -18,6 +20,16 @@ struct HomeView: View {
                 VStack(alignment: .leading, spacing: 24) {
                     header
 
+                    if let savedSudokuGame {
+                        continuePlayingSection(
+                            savedGame: savedSudokuGame
+                        )
+                    }
+
+                    Text("Games")
+                        .font(.title2)
+                        .fontWeight(.bold)
+
                     LazyVGrid(
                         columns: columns,
                         spacing: 16
@@ -30,6 +42,10 @@ struct HomeView: View {
                 .padding()
             }
             .navigationBarHidden(true)
+            .onAppear {
+                savedSudokuGame =
+                    SudokuGameStore.load()
+            }
         }
     }
 
@@ -44,6 +60,57 @@ struct HomeView: View {
                 .foregroundStyle(.secondary)
         }
         .padding(.top, 12)
+    }
+
+    private func continuePlayingSection(
+        savedGame: SudokuSavedGame
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Continue Playing")
+                .font(.title2)
+                .fontWeight(.bold)
+
+            NavigationLink {
+                SudokuView(
+                    savedGame: savedGame
+                )
+            } label: {
+                HStack(spacing: 16) {
+                    Image(systemName: "square.grid.3x3")
+                        .font(.system(size: 30))
+
+                    VStack(
+                        alignment: .leading,
+                        spacing: 4
+                    ) {
+                        Text("Sudoku")
+                            .font(.headline)
+
+                        Text(
+                            "\(savedGame.difficulty.rawValue) • " +
+                            formattedTime(
+                                savedGame.elapsedSeconds
+                            )
+                        )
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    }
+
+                    Spacer()
+
+                    Image(systemName: "play.fill")
+                        .font(.headline)
+                }
+                .padding()
+                .background(
+                    RoundedRectangle(
+                        cornerRadius: 18
+                    )
+                    .fill(.thinMaterial)
+                )
+            }
+            .buttonStyle(.plain)
+        }
     }
 
     @ViewBuilder
@@ -64,6 +131,19 @@ struct HomeView: View {
                 game: game
             )
         }
+    }
+
+    private func formattedTime(
+        _ seconds: Int
+    ) -> String {
+        let minutes = seconds / 60
+        let remainder = seconds % 60
+
+        return String(
+            format: "%02d:%02d",
+            minutes,
+            remainder
+        )
     }
 }
 
