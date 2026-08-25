@@ -31,6 +31,18 @@ final class SudokuViewModel {
         )
     }
 
+    init(savedGame: SudokuSavedGame) {
+        self.difficulty = savedGame.difficulty
+        self.puzzle = savedGame.puzzle
+        self.mistakeCount = savedGame.mistakeCount
+        self.hintCount = savedGame.hintCount
+        self.elapsedSeconds = savedGame.elapsedSeconds
+        self.selectedCellID = savedGame.selectedCellID
+        self.isNotesMode = savedGame.isNotesMode
+        self.isPaused = false
+        self.isCompleted = false
+    }
+
     var selectedCell: SudokuCell? {
         guard let selectedCellID else {
             return nil
@@ -62,6 +74,7 @@ final class SudokuViewModel {
         }
 
         selectedCellID = cell.id
+        saveGame()
     }
 
     func isSelected(_ cell: SudokuCell) -> Bool {
@@ -130,6 +143,7 @@ final class SudokuViewModel {
 
             saveUndoSnapshot()
             toggleNote(number, at: index)
+            saveGame()
             return
         }
 
@@ -148,6 +162,7 @@ final class SudokuViewModel {
         puzzle.cells[index].value = number
         puzzle.cells[index].notes.removeAll()
         checkForCompletion()
+        saveGame()
     }
 
     func clearSelectedCell() {
@@ -182,6 +197,8 @@ final class SudokuViewModel {
         } else {
             puzzle.cells[index].notes.removeAll()
         }
+
+        saveGame()
     }
 
     func toggleNotesMode() {
@@ -190,6 +207,7 @@ final class SudokuViewModel {
         }
 
         isNotesMode.toggle()
+        saveGame()
     }
 
     func undo() {
@@ -205,6 +223,7 @@ final class SudokuViewModel {
         mistakeCount = snapshot.mistakeCount
         hintCount = snapshot.hintCount
         selectedCellID = snapshot.selectedCellID
+        saveGame()
     }
 
     func advanceTimer() {
@@ -221,6 +240,7 @@ final class SudokuViewModel {
         }
 
         isPaused.toggle()
+        saveGame()
     }
 
     func solvePuzzleForTesting() {
@@ -258,9 +278,12 @@ final class SudokuViewModel {
         hintCount += 1
 
         checkForCompletion()
+        saveGame()
     }
 
     func startNewGame() {
+        SudokuGameStore.clear()
+
         puzzle = SudokuPuzzleLibrary.randomPuzzle(
             for: difficulty
         )
@@ -273,10 +296,17 @@ final class SudokuViewModel {
         isCompleted = false
         isNotesMode = false
         undoStack.removeAll()
+
+        saveGame()
     }
 
     func endGame() {
+        SudokuGameStore.clear()
         isPaused = false
+    }
+
+    func saveCurrentGame() {
+        saveGame()
     }
 
     private func saveUndoSnapshot() {
@@ -306,6 +336,31 @@ final class SudokuViewModel {
         if solved {
             isCompleted = true
             isPaused = false
+
+            SudokuGameStore.clear()
         }
+    }
+
+    private func saveGame() {
+        guard !isCompleted else {
+            return
+        }
+
+        guard !puzzle.cells.allSatisfy({ $0.value == $0.solution }) else {
+            SudokuGameStore.clear()
+            return
+        }
+
+        let savedGame = SudokuSavedGame(
+            puzzle: puzzle,
+            difficulty: difficulty,
+            mistakeCount: mistakeCount,
+            hintCount: hintCount,
+            elapsedSeconds: elapsedSeconds,
+            selectedCellID: selectedCellID,
+            isNotesMode: isNotesMode
+        )
+
+        SudokuGameStore.save(savedGame)
     }
 }

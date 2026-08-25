@@ -1,6 +1,6 @@
 import Foundation
 
-struct SudokuPuzzle {
+struct SudokuPuzzle: Codable {
     var cells: [SudokuCell]
 
     init(

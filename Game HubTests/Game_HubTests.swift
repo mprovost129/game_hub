@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import Game_Hub
 
@@ -252,6 +253,75 @@ struct Game_HubTests {
         #expect(!viewModel.isPaused)
         #expect(viewModel.isNotesMode == false)
         #expect(viewModel.puzzle.cells.allSatisfy { $0.value == $0.solution })
+    }
+
+    @MainActor
+    @Test func savedGameCodableRoundTripsSessionState() throws {
+        let viewModel = SudokuViewModel(difficulty: .hard)
+        let cell = try firstEmptyCell(in: viewModel)
+
+        viewModel.selectCell(cell)
+        viewModel.toggleNotesMode()
+        viewModel.enterNumber(1)
+
+        let savedGame = SudokuSavedGame(
+            puzzle: viewModel.puzzle,
+            difficulty: viewModel.difficulty,
+            mistakeCount: 2,
+            hintCount: 1,
+            elapsedSeconds: 42,
+            selectedCellID: viewModel.selectedCellID,
+            isNotesMode: viewModel.isNotesMode
+        )
+
+        let data = try JSONEncoder().encode(savedGame)
+        let decoded = try JSONDecoder().decode(
+            SudokuSavedGame.self,
+            from: data
+        )
+
+        #expect(decoded.difficulty == .hard)
+        #expect(decoded.mistakeCount == 2)
+        #expect(decoded.hintCount == 1)
+        #expect(decoded.elapsedSeconds == 42)
+        #expect(decoded.selectedCellID == cell.id)
+        #expect(decoded.isNotesMode)
+        #expect(decoded.puzzle.cells == viewModel.puzzle.cells)
+    }
+
+    @MainActor
+    @Test func viewModelRestoresSavedGameWithoutPausedState() throws {
+        let originalViewModel = SudokuViewModel(difficulty: .medium)
+        let cell = try firstEmptyCell(in: originalViewModel)
+
+        originalViewModel.selectCell(cell)
+        originalViewModel.toggleNotesMode()
+        originalViewModel.enterNumber(3)
+
+        let savedGame = SudokuSavedGame(
+            puzzle: originalViewModel.puzzle,
+            difficulty: originalViewModel.difficulty,
+            mistakeCount: 1,
+            hintCount: 2,
+            elapsedSeconds: 125,
+            selectedCellID: originalViewModel.selectedCellID,
+            isNotesMode: originalViewModel.isNotesMode
+        )
+
+        let restoredViewModel = SudokuViewModel(
+            savedGame: savedGame
+        )
+
+        #expect(restoredViewModel.difficulty == .medium)
+        #expect(restoredViewModel.puzzle.cells == originalViewModel.puzzle.cells)
+        #expect(restoredViewModel.mistakeCount == 1)
+        #expect(restoredViewModel.hintCount == 2)
+        #expect(restoredViewModel.elapsedSeconds == 125)
+        #expect(restoredViewModel.selectedCellID == cell.id)
+        #expect(restoredViewModel.isNotesMode)
+        #expect(!restoredViewModel.isPaused)
+        #expect(!restoredViewModel.isCompleted)
+        #expect(!restoredViewModel.canUndo)
     }
 
     @Test func hintFillsCorrectEditableCellAndCanBeUndone() {

@@ -5,6 +5,7 @@ struct SudokuView: View {
     let difficulty: SudokuDifficulty
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.scenePhase) private var scenePhase
 
     @State private var viewModel: SudokuViewModel
     @State private var showingNewGameConfirmation = false
@@ -23,6 +24,18 @@ struct SudokuView: View {
         _viewModel = State(
             initialValue: SudokuViewModel(
                 difficulty: difficulty
+            )
+        )
+    }
+
+    init(
+        savedGame: SudokuSavedGame
+    ) {
+        self.difficulty = savedGame.difficulty
+
+        _viewModel = State(
+            initialValue: SudokuViewModel(
+                savedGame: savedGame
             )
         )
     }
@@ -146,6 +159,11 @@ struct SudokuView: View {
         }
         .onReceive(timer) { _ in
             viewModel.advanceTimer()
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase != .active {
+                viewModel.saveCurrentGame()
+            }
         }
         .confirmationDialog(
             "Start a New Game?",
