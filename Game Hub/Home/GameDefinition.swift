@@ -1,11 +1,20 @@
 import Foundation
 
+enum GameAvailability {
+    case available
+    case comingSoon
+}
+
 struct GameDefinition: Identifiable {
     let id: String
     let title: String
     let subtitle: String
     let systemImage: String
-    let isAvailable: Bool
+    let availability: GameAvailability
+
+    var isAvailable: Bool {
+        availability == .available
+    }
 }
 
 extension GameDefinition {
@@ -14,7 +23,7 @@ extension GameDefinition {
         title: "Sudoku",
         subtitle: "Classic number puzzle",
         systemImage: "square.grid.3x3",
-        isAvailable: true
+        availability: .available
     )
 
     static let wordGame = GameDefinition(
@@ -22,7 +31,7 @@ extension GameDefinition {
         title: "Word Game",
         subtitle: "Coming soon",
         systemImage: "textformat.abc",
-        isAvailable: false
+        availability: .comingSoon
     )
 
     static let hangman = GameDefinition(
@@ -30,7 +39,7 @@ extension GameDefinition {
         title: "Hangman",
         subtitle: "Coming soon",
         systemImage: "character.textbox",
-        isAvailable: false
+        availability: .comingSoon
     )
 
     static let numberGame = GameDefinition(
@@ -38,7 +47,7 @@ extension GameDefinition {
         title: "Number Game",
         subtitle: "Coming soon",
         systemImage: "number",
-        isAvailable: false
+        availability: .comingSoon
     )
 
     static let allGames: [GameDefinition] = [

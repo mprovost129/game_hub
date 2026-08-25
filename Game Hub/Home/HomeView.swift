@@ -26,9 +26,10 @@ struct HomeView: View {
                         )
                     }
 
-                    Text("Games")
-                        .font(.title2)
-                        .fontWeight(.bold)
+                    sectionHeader(
+                        title: "Games",
+                        subtitle: "Choose a game."
+                    )
 
                     LazyVGrid(
                         columns: columns,
@@ -50,25 +51,43 @@ struct HomeView: View {
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("Game Hub")
-                .font(.largeTitle)
-                .fontWeight(.bold)
+        HStack {
+            VStack(
+                alignment: .leading,
+                spacing: 5
+            ) {
+                Text("Game Hub")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
 
-            Text("Pick a game and start playing.")
+                Text(
+                    "Classic games. One place."
+                )
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+
+            Image(
+                systemName: "gamecontroller.fill"
+            )
+            .font(.system(size: 30))
+            .foregroundStyle(
+                Color.accentColor
+            )
         }
-        .padding(.top, 12)
+        .padding(.top, 8)
     }
 
     private func continuePlayingSection(
         savedGame: SudokuSavedGame
     ) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Continue Playing")
-                .font(.title2)
-                .fontWeight(.bold)
+            sectionHeader(
+                title: "Continue Playing",
+                subtitle: "Pick up where you left off."
+            )
 
             NavigationLink {
                 SudokuView(
@@ -76,12 +95,28 @@ struct HomeView: View {
                 )
             } label: {
                 HStack(spacing: 16) {
-                    Image(systemName: "square.grid.3x3")
-                        .font(.system(size: 30))
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 14)
+                            .fill(
+                                Color.accentColor.opacity(0.14)
+                            )
+
+                        Image(
+                            systemName: "square.grid.3x3"
+                        )
+                        .font(.system(
+                            size: 28,
+                            weight: .semibold
+                        ))
+                        .foregroundStyle(
+                            Color.accentColor
+                        )
+                    }
+                    .frame(width: 58, height: 58)
 
                     VStack(
                         alignment: .leading,
-                        spacing: 4
+                        spacing: 5
                     ) {
                         Text("Sudoku")
                             .font(.headline)
@@ -94,22 +129,62 @@ struct HomeView: View {
                         )
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
+
+                        Text("Resume game")
+                            .font(.caption)
+                            .foregroundStyle(
+                                Color.accentColor
+                            )
                     }
 
                     Spacer()
 
-                    Image(systemName: "play.fill")
-                        .font(.headline)
+                    Image(
+                        systemName: "play.circle.fill"
+                    )
+                    .font(.system(size: 30))
+                    .foregroundStyle(
+                        Color.accentColor
+                    )
                 }
-                .padding()
+                .padding(16)
                 .background(
                     RoundedRectangle(
-                        cornerRadius: 18
+                        cornerRadius: 20
                     )
-                    .fill(.thinMaterial)
+                    .fill(
+                        Color.accentColor.opacity(0.06)
+                    )
                 )
+                .overlay {
+                    RoundedRectangle(
+                        cornerRadius: 20
+                    )
+                    .stroke(
+                        Color.accentColor.opacity(0.25),
+                        lineWidth: 1.25
+                    )
+                }
             }
             .buttonStyle(.plain)
+        }
+    }
+
+    private func sectionHeader(
+        title: String,
+        subtitle: String
+    ) -> some View {
+        VStack(
+            alignment: .leading,
+            spacing: 3
+        ) {
+            Text(title)
+                .font(.title2)
+                .fontWeight(.bold)
+
+            Text(subtitle)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
         }
     }
 
