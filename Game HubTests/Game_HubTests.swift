@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import Game_Hub
+@testable import game_hub
 
 struct Game_HubTests {
     @Test func viewModelUsesRequestedDifficulty() {

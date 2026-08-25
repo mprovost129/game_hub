@@ -1,5 +1,5 @@
 import Testing
-@testable import Game_Hub
+@testable import game_hub
 
 struct SudokuPuzzleLibraryTests {
     @Test func everyPuzzleHasValidStructure() {
