@@ -55,21 +55,81 @@ struct Game_HubTests {
         #expect(!viewModel.canUndo)
     }
 
-    @Test func undoRestoresMistakeCountAfterWrongEntry() throws {
+    @Test func nonConflictingWrongEntryDoesNotCountAsMistake() throws {
         let viewModel = makeViewModel()
-        let cell = try firstEmptyCell(in: viewModel)
-        let wrongNumber = wrongValue(for: cell)
+        let (cell, wrongNumber) = try firstCellWithNonConflictingWrongValue(
+            in: viewModel
+        )
 
         viewModel.selectCell(cell)
         viewModel.enterNumber(wrongNumber)
 
         #expect(viewModel.selectedCell?.value == wrongNumber)
-        #expect(viewModel.mistakeCount == 1)
+        #expect(viewModel.mistakeCount == 0)
+        #expect(viewModel.selectedCell.map { viewModel.hasConflict($0) } == false)
 
         viewModel.undo()
 
         #expect(viewModel.selectedCell?.value == nil)
         #expect(viewModel.mistakeCount == 0)
+    }
+
+    @Test func undoRestoresMistakeCountAfterConflictingEntry() throws {
+        let viewModel = makeViewModel()
+        let cell = try firstEmptyCell(in: viewModel)
+        let conflictNumber = try conflictingValue(
+            for: cell,
+            in: viewModel
+        )
+        let conflictingPeer = try conflictingPeer(
+            for: cell,
+            value: conflictNumber,
+            in: viewModel
+        )
+
+        viewModel.selectCell(cell)
+        viewModel.enterNumber(conflictNumber)
+
+        #expect(viewModel.selectedCell?.value == conflictNumber)
+        #expect(viewModel.mistakeCount == 1)
+        #expect(viewModel.selectedCell.map { viewModel.hasConflict($0) } == true)
+        #expect(viewModel.hasConflict(conflictingPeer))
+
+        viewModel.undo()
+
+        #expect(viewModel.selectedCell?.value == nil)
+        #expect(viewModel.mistakeCount == 0)
+    }
+
+    @Test func conflictDetectionCoversRowsColumnsAndBoxes() {
+        let viewModel = makeViewModel()
+        var puzzleValues = Array(
+            repeating: 0,
+            count: 81
+        )
+        let solutionValues = Array(
+            repeating: 1,
+            count: 81
+        )
+
+        puzzleValues[0] = 5
+        puzzleValues[1] = 5
+        puzzleValues[2] = 6
+        puzzleValues[11] = 6
+        puzzleValues[10] = 7
+        puzzleValues[20] = 7
+
+        viewModel.puzzle = SudokuPuzzle(
+            puzzle: puzzleValues,
+            solution: solutionValues
+        )
+
+        #expect(viewModel.hasConflict(viewModel.puzzle.cells[0]))
+        #expect(viewModel.hasConflict(viewModel.puzzle.cells[1]))
+        #expect(viewModel.hasConflict(viewModel.puzzle.cells[2]))
+        #expect(viewModel.hasConflict(viewModel.puzzle.cells[11]))
+        #expect(viewModel.hasConflict(viewModel.puzzle.cells[10]))
+        #expect(viewModel.hasConflict(viewModel.puzzle.cells[20]))
     }
 
     @Test func repeatedSameNumberDoesNotCreateUndoStep() throws {
@@ -364,7 +424,12 @@ struct Game_HubTests {
         }
 
         firstViewModel.selectCell(cell)
-        firstViewModel.enterNumber(wrongValue(for: cell))
+        firstViewModel.enterNumber(
+            try conflictingValue(
+                for: cell,
+                in: firstViewModel
+            )
+        )
         firstViewModel.useHint()
         try completePuzzleNormally(firstViewModel)
         firstViewModel.solvePuzzleForTesting()
@@ -470,15 +535,17 @@ struct Game_HubTests {
 
     @Test func hintCorrectsSelectedWrongCellFirst() throws {
         let viewModel = makeViewModel()
-        let cell = try firstEmptyCell(in: viewModel)
+        let (cell, wrongNumber) = try firstCellWithNonConflictingWrongValue(
+            in: viewModel
+        )
 
         viewModel.selectCell(cell)
-        viewModel.enterNumber(wrongValue(for: cell))
+        viewModel.enterNumber(wrongNumber)
         viewModel.useHint()
 
         #expect(viewModel.selectedCellID == cell.id)
         #expect(viewModel.selectedCell?.value == cell.solution)
-        #expect(viewModel.mistakeCount == 1)
+        #expect(viewModel.mistakeCount == 0)
         #expect(viewModel.hintCount == 1)
     }
 
@@ -525,6 +592,10 @@ struct Game_HubTests {
     @Test func hintCanCorrectWrongEntryWithoutChangingMistakeCount() throws {
         let viewModel = makeViewModel()
         let cell = try firstEmptyCell(in: viewModel)
+        let conflictNumber = try conflictingValue(
+            for: cell,
+            in: viewModel
+        )
         let secondCell = try #require(
             viewModel.puzzle.cells.first {
                 !$0.isGiven && $0.id != cell.id
@@ -532,7 +603,7 @@ struct Game_HubTests {
         )
 
         viewModel.selectCell(cell)
-        viewModel.enterNumber(wrongValue(for: cell))
+        viewModel.enterNumber(conflictNumber)
         viewModel.selectCell(secondCell)
 
         #expect(viewModel.mistakeCount == 1)
@@ -570,7 +641,12 @@ struct Game_HubTests {
         viewModel.toggleNotesMode()
         viewModel.enterNumber(2)
         viewModel.toggleNotesMode()
-        viewModel.enterNumber(wrongValue(for: cell))
+        viewModel.enterNumber(
+            try conflictingValue(
+                for: cell,
+                in: viewModel
+            )
+        )
         viewModel.useHint()
         viewModel.advanceTimer()
         viewModel.togglePause()
@@ -663,6 +739,97 @@ struct Game_HubTests {
                 !cell.isGiven && cell.value != cell.solution
             }
         )
+    }
+
+    private func firstCellWithNonConflictingWrongValue(
+        in viewModel: SudokuViewModel
+    ) throws -> (cell: SudokuCell, value: Int) {
+        for cell in viewModel.puzzle.cells where !cell.isGiven {
+            if let value = nonConflictingWrongValue(
+                for: cell,
+                in: viewModel
+            ) {
+                return (cell, value)
+            }
+        }
+
+        let result: (cell: SudokuCell, value: Int)? = nil
+        return try #require(result)
+    }
+
+    private func nonConflictingWrongValue(
+        for cell: SudokuCell,
+        in viewModel: SudokuViewModel
+    ) -> Int? {
+        (1...9).first { value in
+            value != cell.solution &&
+            !hasPeerValue(
+                value,
+                for: cell,
+                in: viewModel
+            )
+        }
+    }
+
+    private func conflictingValue(
+        for cell: SudokuCell,
+        in viewModel: SudokuViewModel
+    ) throws -> Int {
+        try #require(
+            (1...9).first { value in
+                hasPeerValue(
+                    value,
+                    for: cell,
+                    in: viewModel
+                )
+            }
+        )
+    }
+
+    private func conflictingPeer(
+        for cell: SudokuCell,
+        value: Int,
+        in viewModel: SudokuViewModel
+    ) throws -> SudokuCell {
+        try #require(
+            viewModel.puzzle.cells.first { peer in
+                peer.id != cell.id &&
+                peer.value == value &&
+                isPeer(
+                    peer,
+                    of: cell
+                )
+            }
+        )
+    }
+
+    private func hasPeerValue(
+        _ value: Int,
+        for cell: SudokuCell,
+        in viewModel: SudokuViewModel
+    ) -> Bool {
+        viewModel.puzzle.cells.contains { peer in
+            peer.id != cell.id &&
+            peer.value == value &&
+            isPeer(
+                peer,
+                of: cell
+            )
+        }
+    }
+
+    private func isPeer(
+        _ firstCell: SudokuCell,
+        of secondCell: SudokuCell
+    ) -> Bool {
+        let sameRow = firstCell.row == secondCell.row
+        let sameColumn = firstCell.column == secondCell.column
+
+        let sameBox =
+            firstCell.row / 3 == secondCell.row / 3 &&
+            firstCell.column / 3 == secondCell.column / 3
+
+        return sameRow || sameColumn || sameBox
     }
 
     private func makeViewModel(

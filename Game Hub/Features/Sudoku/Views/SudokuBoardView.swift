@@ -22,7 +22,7 @@ struct SudokuBoardView: View {
                                     isSelected: viewModel.isSelected(cell),
                                     isPeer: viewModel.isPeerOfSelectedCell(cell),
                                     hasSameValue: viewModel.hasSameValueAsSelectedCell(cell),
-                                    isIncorrect: viewModel.isIncorrect(cell)
+                                    hasConflict: viewModel.hasConflict(cell)
                                 )
                                 .frame(
                                     width: cellSize,
@@ -50,7 +50,7 @@ private struct SudokuCellView: View {
     let isSelected: Bool
     let isPeer: Bool
     let hasSameValue: Bool
-    let isIncorrect: Bool
+    let hasConflict: Bool
 
     var body: some View {
         ZStack {
@@ -80,7 +80,7 @@ private struct SudokuCellView: View {
             return .primary
         }
 
-        if isIncorrect {
+        if hasConflict {
             return .red
         }
 

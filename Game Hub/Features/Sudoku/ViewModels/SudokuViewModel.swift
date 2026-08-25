@@ -120,15 +120,31 @@ final class SudokuViewModel {
         return selectedValue == cellValue
     }
 
-    func isIncorrect(_ cell: SudokuCell) -> Bool {
-        guard
-            !cell.isGiven,
-            let value = cell.value
-        else {
+    func hasConflict(_ cell: SudokuCell) -> Bool {
+        guard let value = cell.value else {
             return false
         }
 
-        return value != cell.solution
+        return puzzle.cells.contains { otherCell in
+            guard
+                otherCell.id != cell.id,
+                otherCell.value == value
+            else {
+                return false
+            }
+
+            let sameRow =
+                otherCell.row == cell.row
+
+            let sameColumn =
+                otherCell.column == cell.column
+
+            let sameBox =
+                otherCell.row / 3 == cell.row / 3 &&
+                otherCell.column / 3 == cell.column / 3
+
+            return sameRow || sameColumn || sameBox
+        }
     }
 
     func enterNumber(_ number: Int) {
@@ -167,13 +183,13 @@ final class SudokuViewModel {
         }
 
         saveUndoSnapshot()
+        puzzle.cells[index].value = number
+        puzzle.cells[index].notes.removeAll()
 
-        if number != puzzle.cells[index].solution {
+        if hasConflict(puzzle.cells[index]) {
             mistakeCount += 1
         }
 
-        puzzle.cells[index].value = number
-        puzzle.cells[index].notes.removeAll()
         checkForCompletion()
         saveGame()
     }
