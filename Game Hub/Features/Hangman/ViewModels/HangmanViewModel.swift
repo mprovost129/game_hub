@@ -20,6 +20,10 @@ final class HangmanViewModel {
     func guess(
         _ letter: Character
     ) {
+        guard game.status == .playing else {
+            return
+        }
+
         game.guessedLetters.insert(
             Character(
                 letter.uppercased()

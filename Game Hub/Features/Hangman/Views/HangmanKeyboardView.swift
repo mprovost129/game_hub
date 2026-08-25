@@ -3,6 +3,7 @@ import SwiftUI
 struct HangmanKeyboardView: View {
     let letters: [Character]
     let guessedLetters: Set<Character>
+    let word: String
     let onLetterSelected: (Character) -> Void
 
     private let columns = Array(
@@ -27,6 +28,15 @@ struct HangmanKeyboardView: View {
                 } label: {
                     Text(String(letter))
                         .font(.headline)
+                        .foregroundStyle(
+                            guessedLetters.contains(letter)
+                            ? (
+                                isCorrect(letter)
+                                ? Color.green
+                                : Color.red
+                            )
+                            : Color.primary
+                        )
                         .frame(maxWidth: .infinity)
                         .frame(height: 42)
                 }
@@ -36,5 +46,11 @@ struct HangmanKeyboardView: View {
                 )
             }
         }
+    }
+
+    private func isCorrect(
+        _ letter: Character
+    ) -> Bool {
+        word.contains(letter)
     }
 }
