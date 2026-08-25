@@ -24,7 +24,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		FFFCECB8303CDB1900CD850E /* Game Hub.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Game Hub.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		FFFCECB8303CDB1900CD850E /* game_hub.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = game_hub.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FFFCECC5303CDB1B00CD850E /* Game HubTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Game HubTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		FFFCECCF303CDB1B00CD850E /* Game HubUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Game HubUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -85,7 +85,7 @@
 		FFFCECB9303CDB1900CD850E /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				FFFCECB8303CDB1900CD850E /* Game Hub.app */,
+				FFFCECB8303CDB1900CD850E /* game_hub.app */,
 				FFFCECC5303CDB1B00CD850E /* Game HubTests.xctest */,
 				FFFCECCF303CDB1B00CD850E /* Game HubUITests.xctest */,
 			);
@@ -114,7 +114,7 @@
 			packageProductDependencies = (
 			);
 			productName = "Game Hub";
-			productReference = FFFCECB8303CDB1900CD850E /* Game Hub.app */;
+			productReference = FFFCECB8303CDB1900CD850E /* game_hub.app */;
 			productType = "com.apple.product-type.application";
 		};
 		FFFCECC4303CDB1B00CD850E /* Game HubTests */ = {
@@ -411,7 +411,7 @@
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "Slater-Woods-Design-Co..Game-Hub";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = game_hub;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
@@ -443,7 +443,7 @@
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "Slater-Woods-Design-Co..Game-Hub";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = game_hub;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
