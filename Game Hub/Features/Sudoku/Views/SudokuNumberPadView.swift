@@ -9,6 +9,7 @@ struct SudokuNumberPadView: View {
     let onNotesToggle: () -> Void
     let onUndo: () -> Void
     let onErase: () -> Void
+    let onHint: () -> Void
     let onPauseToggle: () -> Void
 
     var body: some View {
@@ -77,6 +78,20 @@ struct SudokuNumberPadView: View {
                 .disabled(isPaused)
 
                 Button {
+                    onHint()
+                } label: {
+                    VStack(spacing: 4) {
+                        Image(systemName: "lightbulb")
+                        Text("Hint")
+                    }
+                    .font(.subheadline)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 52)
+                }
+                .buttonStyle(.bordered)
+                .disabled(isPaused)
+
+                Button {
                     onPauseToggle()
                 } label: {
                     VStack(spacing: 4) {
@@ -104,7 +119,7 @@ struct SudokuNumberPadView: View {
     private var notesControlLabel: some View {
         VStack(spacing: 4) {
             Image(systemName: "pencil")
-            Text(isNotesMode ? "Notes On" : "Notes")
+            Text("Notes")
         }
         .font(.subheadline)
         .frame(maxWidth: .infinity)
@@ -128,6 +143,9 @@ struct SudokuNumberPadView: View {
         },
         onErase: {
             print("Erase")
+        },
+        onHint: {
+            print("Hint")
         },
         onPauseToggle: {
             print("Pause")

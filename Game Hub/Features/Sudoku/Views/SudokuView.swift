@@ -35,9 +35,12 @@ struct SudokuView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
 
-                    Text("Mistakes: \(viewModel.mistakeCount)")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                    HStack(spacing: 12) {
+                        Text("Mistakes: \(viewModel.mistakeCount)")
+                        Text("Hints: \(viewModel.hintCount)")
+                    }
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
                 }
 
                 Spacer()
@@ -89,6 +92,9 @@ struct SudokuView: View {
                 },
                 onErase: {
                     viewModel.clearSelectedCell()
+                },
+                onHint: {
+                    viewModel.useHint()
                 },
                 onPauseToggle: {
                     viewModel.togglePause()

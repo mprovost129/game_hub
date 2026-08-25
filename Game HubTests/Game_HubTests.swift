@@ -254,6 +254,88 @@ struct Game_HubTests {
         #expect(viewModel.puzzle.cells.allSatisfy { $0.value == $0.solution })
     }
 
+    @Test func hintFillsCorrectEditableCellAndCanBeUndone() {
+        let viewModel = SudokuViewModel()
+        let unsolvedCount = playableUnsolvedCount(in: viewModel)
+
+        viewModel.useHint()
+
+        #expect(viewModel.hintCount == 1)
+        #expect(viewModel.canUndo)
+        #expect(viewModel.selectedCell?.value == viewModel.selectedCell?.solution)
+        #expect(playableUnsolvedCount(in: viewModel) == unsolvedCount - 1)
+
+        viewModel.undo()
+
+        #expect(viewModel.hintCount == 0)
+        #expect(!viewModel.canUndo)
+        #expect(playableUnsolvedCount(in: viewModel) == unsolvedCount)
+    }
+
+    @Test func hintClearsNotesWhenItFillsACell() throws {
+        let viewModel = SudokuViewModel()
+        let cell = try firstEmptyCell(in: viewModel)
+        let secondCell = try #require(
+            viewModel.puzzle.cells.first {
+                !$0.isGiven && $0.id != cell.id
+            }
+        )
+
+        viewModel.selectCell(cell)
+        viewModel.toggleNotesMode()
+        viewModel.enterNumber(1)
+        viewModel.enterNumber(2)
+        viewModel.toggleNotesMode()
+        viewModel.selectCell(secondCell)
+
+        while viewModel.selectedCellID != cell.id && viewModel.hintCount < 81 {
+            viewModel.useHint()
+        }
+
+        #expect(viewModel.selectedCell?.value == cell.solution)
+        #expect(viewModel.selectedCell?.notes.isEmpty == true)
+    }
+
+    @Test func hintCanCorrectWrongEntryWithoutChangingMistakeCount() throws {
+        let viewModel = SudokuViewModel()
+        let cell = try firstEmptyCell(in: viewModel)
+        let secondCell = try #require(
+            viewModel.puzzle.cells.first {
+                !$0.isGiven && $0.id != cell.id
+            }
+        )
+
+        viewModel.selectCell(cell)
+        viewModel.enterNumber(wrongValue(for: cell))
+        viewModel.selectCell(secondCell)
+
+        #expect(viewModel.mistakeCount == 1)
+
+        while viewModel.selectedCellID != cell.id && viewModel.hintCount < 81 {
+            viewModel.useHint()
+        }
+
+        #expect(viewModel.selectedCell?.value == cell.solution)
+        #expect(viewModel.mistakeCount == 1)
+    }
+
+    @Test func pauseAndCompletionPreventHints() {
+        let viewModel = SudokuViewModel()
+        let unsolvedCount = playableUnsolvedCount(in: viewModel)
+
+        viewModel.togglePause()
+        viewModel.useHint()
+
+        #expect(viewModel.hintCount == 0)
+        #expect(playableUnsolvedCount(in: viewModel) == unsolvedCount)
+
+        viewModel.togglePause()
+        viewModel.solvePuzzleForTesting()
+        viewModel.useHint()
+
+        #expect(viewModel.hintCount == 0)
+    }
+
     @Test func startNewGameResetsSessionState() throws {
         let viewModel = SudokuViewModel(difficulty: .medium)
         let cell = try firstEmptyCell(in: viewModel)
@@ -263,11 +345,13 @@ struct Game_HubTests {
         viewModel.enterNumber(2)
         viewModel.toggleNotesMode()
         viewModel.enterNumber(wrongValue(for: cell))
+        viewModel.useHint()
         viewModel.advanceTimer()
         viewModel.togglePause()
 
         #expect(viewModel.selectedCellID != nil)
         #expect(viewModel.mistakeCount == 1)
+        #expect(viewModel.hintCount == 1)
         #expect(viewModel.elapsedSeconds == 1)
         #expect(viewModel.isPaused)
         #expect(viewModel.canUndo)
@@ -278,6 +362,7 @@ struct Game_HubTests {
         #expect(viewModel.puzzle.cells.count == 81)
         #expect(viewModel.selectedCellID == nil)
         #expect(viewModel.mistakeCount == 0)
+        #expect(viewModel.hintCount == 0)
         #expect(viewModel.elapsedSeconds == 0)
         #expect(!viewModel.isPaused)
         #expect(!viewModel.isCompleted)
@@ -298,6 +383,12 @@ struct Game_HubTests {
 
     private func firstEmptyCell(in viewModel: SudokuViewModel) throws -> SudokuCell {
         try #require(viewModel.puzzle.cells.first { !$0.isGiven })
+    }
+
+    private func playableUnsolvedCount(in viewModel: SudokuViewModel) -> Int {
+        viewModel.puzzle.cells.filter { cell in
+            !cell.isGiven && cell.value != cell.solution
+        }.count
     }
 
     private func wrongValue(for cell: SudokuCell) -> Int {

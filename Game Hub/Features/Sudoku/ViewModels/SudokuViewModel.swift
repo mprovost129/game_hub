@@ -4,6 +4,7 @@ import Observation
 private struct SudokuSnapshot {
     let cells: [SudokuCell]
     let mistakeCount: Int
+    let hintCount: Int
     let selectedCellID: UUID?
 }
 
@@ -13,6 +14,7 @@ final class SudokuViewModel {
     var puzzle: SudokuPuzzle
     var selectedCellID: UUID?
     var mistakeCount = 0
+    var hintCount = 0
     var isNotesMode = false
     var elapsedSeconds = 0
     var isPaused = false
@@ -201,6 +203,7 @@ final class SudokuViewModel {
 
         puzzle.cells = snapshot.cells
         mistakeCount = snapshot.mistakeCount
+        hintCount = snapshot.hintCount
         selectedCellID = snapshot.selectedCellID
     }
 
@@ -233,6 +236,30 @@ final class SudokuViewModel {
         checkForCompletion()
     }
 
+    func useHint() {
+        guard !isPaused, !isCompleted else {
+            return
+        }
+
+        let candidates = puzzle.cells.indices.filter { index in
+            !puzzle.cells[index].isGiven &&
+            puzzle.cells[index].value != puzzle.cells[index].solution
+        }
+
+        guard let index = candidates.randomElement() else {
+            return
+        }
+
+        saveUndoSnapshot()
+
+        puzzle.cells[index].value = puzzle.cells[index].solution
+        puzzle.cells[index].notes.removeAll()
+        selectedCellID = puzzle.cells[index].id
+        hintCount += 1
+
+        checkForCompletion()
+    }
+
     func startNewGame() {
         puzzle = SudokuPuzzleLibrary.randomPuzzle(
             for: difficulty
@@ -240,6 +267,7 @@ final class SudokuViewModel {
 
         selectedCellID = nil
         mistakeCount = 0
+        hintCount = 0
         elapsedSeconds = 0
         isPaused = false
         isCompleted = false
@@ -256,6 +284,7 @@ final class SudokuViewModel {
             SudokuSnapshot(
                 cells: puzzle.cells,
                 mistakeCount: mistakeCount,
+                hintCount: hintCount,
                 selectedCellID: selectedCellID
             )
         )
