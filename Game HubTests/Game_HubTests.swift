@@ -4,7 +4,7 @@ import Testing
 
 struct Game_HubTests {
     @Test func viewModelUsesRequestedDifficulty() {
-        let viewModel = SudokuViewModel(difficulty: .hard)
+        let viewModel = makeViewModel(difficulty: .hard)
 
         #expect(viewModel.difficulty == .hard)
         #expect(viewModel.puzzle.cells.count == 81)
@@ -39,7 +39,7 @@ struct Game_HubTests {
     }
 
     @Test func undoRestoresCorrectNumberEntry() throws {
-        let viewModel = SudokuViewModel()
+        let viewModel = makeViewModel()
         let cell = try firstEmptyCell(in: viewModel)
 
         viewModel.selectCell(cell)
@@ -56,7 +56,7 @@ struct Game_HubTests {
     }
 
     @Test func undoRestoresMistakeCountAfterWrongEntry() throws {
-        let viewModel = SudokuViewModel()
+        let viewModel = makeViewModel()
         let cell = try firstEmptyCell(in: viewModel)
         let wrongNumber = wrongValue(for: cell)
 
@@ -73,7 +73,7 @@ struct Game_HubTests {
     }
 
     @Test func repeatedSameNumberDoesNotCreateUndoStep() throws {
-        let viewModel = SudokuViewModel()
+        let viewModel = makeViewModel()
         let cell = try firstEmptyCell(in: viewModel)
 
         viewModel.selectCell(cell)
@@ -86,7 +86,7 @@ struct Game_HubTests {
     }
 
     @Test func undoRestoresNoteChangesOneAtATime() throws {
-        let viewModel = SudokuViewModel()
+        let viewModel = makeViewModel()
         let cell = try firstEmptyCell(in: viewModel)
 
         viewModel.selectCell(cell)
@@ -109,7 +109,7 @@ struct Game_HubTests {
     }
 
     @Test func undoRestoresRemovedNote() throws {
-        let viewModel = SudokuViewModel()
+        let viewModel = makeViewModel()
         let cell = try firstEmptyCell(in: viewModel)
 
         viewModel.selectCell(cell)
@@ -125,7 +125,7 @@ struct Game_HubTests {
     }
 
     @Test func undoRestoresErasedValueAndNotes() throws {
-        let viewModel = SudokuViewModel()
+        let viewModel = makeViewModel()
         let cell = try firstEmptyCell(in: viewModel)
 
         viewModel.selectCell(cell)
@@ -152,7 +152,7 @@ struct Game_HubTests {
     }
 
     @Test func givenCellsCannotBeModifiedOrUndone() throws {
-        let viewModel = SudokuViewModel()
+        let viewModel = makeViewModel()
         let givenCell = try #require(viewModel.puzzle.cells.first { $0.isGiven })
         let originalValue = givenCell.value
 
@@ -167,7 +167,7 @@ struct Game_HubTests {
     }
 
     @Test func timerFormatsElapsedTimeAndStopsWhilePaused() {
-        let viewModel = SudokuViewModel()
+        let viewModel = makeViewModel()
 
         for _ in 0..<65 {
             viewModel.advanceTimer()
@@ -184,7 +184,7 @@ struct Game_HubTests {
     }
 
     @Test func pausePreventsGameplayChanges() throws {
-        let viewModel = SudokuViewModel()
+        let viewModel = makeViewModel()
         let cell = try firstEmptyCell(in: viewModel)
 
         viewModel.selectCell(cell)
@@ -205,7 +205,7 @@ struct Game_HubTests {
     }
 
     @Test func pausePreventsSelectionChanges() throws {
-        let viewModel = SudokuViewModel()
+        let viewModel = makeViewModel()
         let firstCell = try firstEmptyCell(in: viewModel)
         let secondCell = try #require(
             viewModel.puzzle.cells.first {
@@ -221,7 +221,7 @@ struct Game_HubTests {
     }
 
     @Test func debugSolveCompletesPuzzleAndStopsTimer() {
-        let viewModel = SudokuViewModel()
+        let viewModel = makeViewModel()
 
         for _ in 0..<8 {
             viewModel.advanceTimer()
@@ -238,7 +238,7 @@ struct Game_HubTests {
     }
 
     @Test func completionPreventsGameplayChanges() throws {
-        let viewModel = SudokuViewModel()
+        let viewModel = makeViewModel()
         let cell = try firstEmptyCell(in: viewModel)
 
         viewModel.selectCell(cell)
@@ -257,7 +257,7 @@ struct Game_HubTests {
 
     @MainActor
     @Test func savedGameCodableRoundTripsSessionState() throws {
-        let viewModel = SudokuViewModel(difficulty: .hard)
+        let viewModel = makeViewModel(difficulty: .hard)
         let cell = try firstEmptyCell(in: viewModel)
 
         viewModel.selectCell(cell)
@@ -291,7 +291,7 @@ struct Game_HubTests {
 
     @MainActor
     @Test func viewModelRestoresSavedGameWithoutPausedState() throws {
-        let originalViewModel = SudokuViewModel(difficulty: .medium)
+        let originalViewModel = makeViewModel(difficulty: .medium)
         let cell = try firstEmptyCell(in: originalViewModel)
 
         originalViewModel.selectCell(cell)
@@ -309,7 +309,9 @@ struct Game_HubTests {
         )
 
         let restoredViewModel = SudokuViewModel(
-            savedGame: savedGame
+            savedGame: savedGame,
+            gameDefaults: isolatedDefaults(),
+            statisticsDefaults: isolatedDefaults()
         )
 
         #expect(restoredViewModel.difficulty == .medium)
@@ -326,16 +328,16 @@ struct Game_HubTests {
 
     @MainActor
     @Test func completedGamesRecordStatisticsOnceAndTrackBestTime() throws {
-        let originalStatistics = SudokuStatisticsStore.load()
-        defer {
-            SudokuStatisticsStore.save(originalStatistics)
-        }
-
+        let statisticsDefaults = isolatedDefaults()
         SudokuStatisticsStore.save(
-            SudokuStatistics()
+            SudokuStatistics(),
+            defaults: statisticsDefaults
         )
 
-        let firstViewModel = SudokuViewModel(difficulty: .hard)
+        let firstViewModel = makeViewModel(
+            difficulty: .hard,
+            statisticsDefaults: statisticsDefaults
+        )
         let cell = try firstEmptyCell(in: firstViewModel)
 
         for _ in 0..<90 {
@@ -345,10 +347,12 @@ struct Game_HubTests {
         firstViewModel.selectCell(cell)
         firstViewModel.enterNumber(wrongValue(for: cell))
         firstViewModel.useHint()
-        firstViewModel.solvePuzzleForTesting()
+        try completePuzzleNormally(firstViewModel)
         firstViewModel.solvePuzzleForTesting()
 
-        var statistics = SudokuStatisticsStore.load()
+        var statistics = SudokuStatisticsStore.load(
+            defaults: statisticsDefaults
+        )
 
         #expect(statistics.gamesCompleted == 1)
         #expect(statistics.hardCompleted == 1)
@@ -356,35 +360,67 @@ struct Game_HubTests {
         #expect(statistics.totalHints == 1)
         #expect(statistics.bestHardTime == 90)
 
-        let secondViewModel = SudokuViewModel(difficulty: .hard)
+        let secondViewModel = makeViewModel(
+            difficulty: .hard,
+            statisticsDefaults: statisticsDefaults
+        )
 
         for _ in 0..<120 {
             secondViewModel.advanceTimer()
         }
 
-        secondViewModel.solvePuzzleForTesting()
-        statistics = SudokuStatisticsStore.load()
+        try completePuzzleNormally(secondViewModel)
+        statistics = SudokuStatisticsStore.load(
+            defaults: statisticsDefaults
+        )
 
         #expect(statistics.gamesCompleted == 2)
         #expect(statistics.hardCompleted == 2)
         #expect(statistics.bestHardTime == 90)
 
-        let thirdViewModel = SudokuViewModel(difficulty: .hard)
+        let thirdViewModel = makeViewModel(
+            difficulty: .hard,
+            statisticsDefaults: statisticsDefaults
+        )
 
         for _ in 0..<30 {
             thirdViewModel.advanceTimer()
         }
 
-        thirdViewModel.solvePuzzleForTesting()
-        statistics = SudokuStatisticsStore.load()
+        try completePuzzleNormally(thirdViewModel)
+        statistics = SudokuStatisticsStore.load(
+            defaults: statisticsDefaults
+        )
 
         #expect(statistics.gamesCompleted == 3)
         #expect(statistics.hardCompleted == 3)
         #expect(statistics.bestHardTime == 30)
     }
 
+    @MainActor
+    @Test func debugSolveDoesNotRecordStatistics() {
+        let statisticsDefaults = isolatedDefaults()
+        SudokuStatisticsStore.save(
+            SudokuStatistics(),
+            defaults: statisticsDefaults
+        )
+
+        let viewModel = makeViewModel(
+            statisticsDefaults: statisticsDefaults
+        )
+
+        viewModel.solvePuzzleForTesting()
+
+        let statistics = SudokuStatisticsStore.load(
+            defaults: statisticsDefaults
+        )
+
+        #expect(viewModel.isCompleted)
+        #expect(statistics.gamesCompleted == 0)
+    }
+
     @Test func hintFillsCorrectEditableCellAndCanBeUndone() {
-        let viewModel = SudokuViewModel()
+        let viewModel = makeViewModel()
         let unsolvedCount = playableUnsolvedCount(in: viewModel)
 
         viewModel.useHint()
@@ -402,7 +438,7 @@ struct Game_HubTests {
     }
 
     @Test func hintClearsNotesWhenItFillsACell() throws {
-        let viewModel = SudokuViewModel()
+        let viewModel = makeViewModel()
         let cell = try firstEmptyCell(in: viewModel)
         let secondCell = try #require(
             viewModel.puzzle.cells.first {
@@ -426,7 +462,7 @@ struct Game_HubTests {
     }
 
     @Test func hintCanCorrectWrongEntryWithoutChangingMistakeCount() throws {
-        let viewModel = SudokuViewModel()
+        let viewModel = makeViewModel()
         let cell = try firstEmptyCell(in: viewModel)
         let secondCell = try #require(
             viewModel.puzzle.cells.first {
@@ -449,7 +485,7 @@ struct Game_HubTests {
     }
 
     @Test func pauseAndCompletionPreventHints() {
-        let viewModel = SudokuViewModel()
+        let viewModel = makeViewModel()
         let unsolvedCount = playableUnsolvedCount(in: viewModel)
 
         viewModel.togglePause()
@@ -466,7 +502,7 @@ struct Game_HubTests {
     }
 
     @Test func startNewGameResetsSessionState() throws {
-        let viewModel = SudokuViewModel(difficulty: .medium)
+        let viewModel = makeViewModel(difficulty: .medium)
         let cell = try firstEmptyCell(in: viewModel)
 
         viewModel.selectCell(cell)
@@ -500,7 +536,7 @@ struct Game_HubTests {
     }
 
     @Test func endGameClearsPausedState() {
-        let viewModel = SudokuViewModel()
+        let viewModel = makeViewModel()
 
         viewModel.togglePause()
         #expect(viewModel.isPaused)
@@ -514,10 +550,69 @@ struct Game_HubTests {
         try #require(viewModel.puzzle.cells.first { !$0.isGiven })
     }
 
+    private func completePuzzleNormally(
+        _ viewModel: SudokuViewModel
+    ) throws {
+        let finalCell = try firstPlayableUnsolvedCell(in: viewModel)
+
+        for index in viewModel.puzzle.cells.indices {
+            guard viewModel.puzzle.cells[index].id != finalCell.id else {
+                continue
+            }
+
+            guard !viewModel.puzzle.cells[index].isGiven else {
+                continue
+            }
+
+            viewModel.puzzle.cells[index].value =
+                viewModel.puzzle.cells[index].solution
+
+            viewModel.puzzle.cells[index].notes.removeAll()
+        }
+
+        viewModel.selectCell(finalCell)
+        viewModel.enterNumber(finalCell.solution)
+    }
+
     private func playableUnsolvedCount(in viewModel: SudokuViewModel) -> Int {
         viewModel.puzzle.cells.filter { cell in
             !cell.isGiven && cell.value != cell.solution
         }.count
+    }
+
+    private func firstPlayableUnsolvedCell(
+        in viewModel: SudokuViewModel
+    ) throws -> SudokuCell {
+        try #require(
+            viewModel.puzzle.cells.first { cell in
+                !cell.isGiven && cell.value != cell.solution
+            }
+        )
+    }
+
+    private func makeViewModel(
+        difficulty: SudokuDifficulty = .easy,
+        gameDefaults: UserDefaults? = nil,
+        statisticsDefaults: UserDefaults? = nil
+    ) -> SudokuViewModel {
+        SudokuViewModel(
+            difficulty: difficulty,
+            gameDefaults: gameDefaults ?? isolatedDefaults(),
+            statisticsDefaults: statisticsDefaults ?? isolatedDefaults()
+        )
+    }
+
+    private func isolatedDefaults() -> UserDefaults {
+        let suiteName = "GameHubTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(
+            suiteName: suiteName
+        )!
+
+        defaults.removePersistentDomain(
+            forName: suiteName
+        )
+
+        return defaults
     }
 
     private func wrongValue(for cell: SudokuCell) -> Int {
