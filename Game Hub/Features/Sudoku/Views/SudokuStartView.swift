@@ -3,6 +3,9 @@ import SwiftUI
 struct SudokuStartView: View {
     @State private var selectedDifficulty: SudokuDifficulty = .easy
     @State private var savedGame: SudokuSavedGame?
+    @State private var showingReplaceGameConfirmation = false
+    @State private var pendingDifficulty: SudokuDifficulty?
+    @State private var replacementDifficulty: SudokuDifficulty?
 
     var body: some View {
         VStack(spacing: 28) {
@@ -55,17 +58,29 @@ struct SudokuStartView: View {
                     .foregroundStyle(.secondary)
             }
 
-            NavigationLink {
-                SudokuView(
-                    difficulty: selectedDifficulty
-                )
+            Button {
+                if savedGame != nil {
+                    replacementDifficulty = selectedDifficulty
+                    showingReplaceGameConfirmation = true
+                } else {
+                    pendingDifficulty = selectedDifficulty
+                }
             } label: {
-                Text("Start Game")
+                Text("Start New Game")
                     .font(.headline)
                     .frame(maxWidth: .infinity)
                     .frame(height: 50)
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(.bordered)
+
+            NavigationLink {
+                SudokuStatisticsView()
+            } label: {
+                Label(
+                    "Statistics",
+                    systemImage: "chart.bar"
+                )
+            }
 
             Spacer()
         }
@@ -74,6 +89,41 @@ struct SudokuStartView: View {
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             savedGame = SudokuGameStore.load()
+        }
+        .navigationDestination(
+            item: $pendingDifficulty
+        ) { difficulty in
+            SudokuView(
+                difficulty: difficulty
+            )
+        }
+        .confirmationDialog(
+            "Start a New Game?",
+            isPresented: $showingReplaceGameConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button(
+                "Start New Game",
+                role: .destructive
+            ) {
+                SudokuGameStore.clear()
+
+                pendingDifficulty = replacementDifficulty ?? selectedDifficulty
+                replacementDifficulty = nil
+                savedGame = nil
+            }
+
+            Button(
+                "Keep Current Game",
+                role: .cancel
+            ) {
+                replacementDifficulty = nil
+                pendingDifficulty = nil
+            }
+        } message: {
+            Text(
+                "Your unfinished Sudoku game will be deleted."
+            )
         }
     }
 

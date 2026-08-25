@@ -329,6 +329,10 @@ final class SudokuViewModel {
     }
 
     private func checkForCompletion() {
+        guard !isCompleted else {
+            return
+        }
+
         let solved = puzzle.cells.allSatisfy { cell in
             cell.value == cell.solution
         }
@@ -338,7 +342,53 @@ final class SudokuViewModel {
             isPaused = false
 
             SudokuGameStore.clear()
+            recordCompletedGame()
         }
+    }
+
+    private func recordCompletedGame() {
+        var statistics = SudokuStatisticsStore.load()
+
+        statistics.gamesCompleted += 1
+        statistics.totalMistakes += mistakeCount
+        statistics.totalHints += hintCount
+
+        switch difficulty {
+        case .easy:
+            statistics.easyCompleted += 1
+            statistics.bestEasyTime = bestTime(
+                current: statistics.bestEasyTime
+            )
+
+        case .medium:
+            statistics.mediumCompleted += 1
+            statistics.bestMediumTime = bestTime(
+                current: statistics.bestMediumTime
+            )
+
+        case .hard:
+            statistics.hardCompleted += 1
+            statistics.bestHardTime = bestTime(
+                current: statistics.bestHardTime
+            )
+        }
+
+        SudokuStatisticsStore.save(
+            statistics
+        )
+    }
+
+    private func bestTime(
+        current: Int?
+    ) -> Int {
+        if let current {
+            return min(
+                current,
+                elapsedSeconds
+            )
+        }
+
+        return elapsedSeconds
     }
 
     private func saveGame() {

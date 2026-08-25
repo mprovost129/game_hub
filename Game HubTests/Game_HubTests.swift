@@ -324,6 +324,65 @@ struct Game_HubTests {
         #expect(!restoredViewModel.canUndo)
     }
 
+    @MainActor
+    @Test func completedGamesRecordStatisticsOnceAndTrackBestTime() throws {
+        let originalStatistics = SudokuStatisticsStore.load()
+        defer {
+            SudokuStatisticsStore.save(originalStatistics)
+        }
+
+        SudokuStatisticsStore.save(
+            SudokuStatistics()
+        )
+
+        let firstViewModel = SudokuViewModel(difficulty: .hard)
+        let cell = try firstEmptyCell(in: firstViewModel)
+
+        for _ in 0..<90 {
+            firstViewModel.advanceTimer()
+        }
+
+        firstViewModel.selectCell(cell)
+        firstViewModel.enterNumber(wrongValue(for: cell))
+        firstViewModel.useHint()
+        firstViewModel.solvePuzzleForTesting()
+        firstViewModel.solvePuzzleForTesting()
+
+        var statistics = SudokuStatisticsStore.load()
+
+        #expect(statistics.gamesCompleted == 1)
+        #expect(statistics.hardCompleted == 1)
+        #expect(statistics.totalMistakes == 1)
+        #expect(statistics.totalHints == 1)
+        #expect(statistics.bestHardTime == 90)
+
+        let secondViewModel = SudokuViewModel(difficulty: .hard)
+
+        for _ in 0..<120 {
+            secondViewModel.advanceTimer()
+        }
+
+        secondViewModel.solvePuzzleForTesting()
+        statistics = SudokuStatisticsStore.load()
+
+        #expect(statistics.gamesCompleted == 2)
+        #expect(statistics.hardCompleted == 2)
+        #expect(statistics.bestHardTime == 90)
+
+        let thirdViewModel = SudokuViewModel(difficulty: .hard)
+
+        for _ in 0..<30 {
+            thirdViewModel.advanceTimer()
+        }
+
+        thirdViewModel.solvePuzzleForTesting()
+        statistics = SudokuStatisticsStore.load()
+
+        #expect(statistics.gamesCompleted == 3)
+        #expect(statistics.hardCompleted == 3)
+        #expect(statistics.bestHardTime == 30)
+    }
+
     @Test func hintFillsCorrectEditableCellAndCanBeUndone() {
         let viewModel = SudokuViewModel()
         let unsolvedCount = playableUnsolvedCount(in: viewModel)
