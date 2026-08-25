@@ -3,9 +3,11 @@ import Foundation
 enum SudokuStatisticsStore {
     private static let statisticsKey = "sudoku.statistics"
 
-    static func load() -> SudokuStatistics {
+    static func load(
+        defaults: UserDefaults = .standard
+    ) -> SudokuStatistics {
         guard
-            let data = UserDefaults.standard.data(
+            let data = defaults.data(
                 forKey: statisticsKey
             ),
             let statistics = try? JSONDecoder().decode(
@@ -20,7 +22,8 @@ enum SudokuStatisticsStore {
     }
 
     static func save(
-        _ statistics: SudokuStatistics
+        _ statistics: SudokuStatistics,
+        defaults: UserDefaults = .standard
     ) {
         guard let data = try? JSONEncoder().encode(
             statistics
@@ -28,7 +31,7 @@ enum SudokuStatisticsStore {
             return
         }
 
-        UserDefaults.standard.set(
+        defaults.set(
             data,
             forKey: statisticsKey
         )

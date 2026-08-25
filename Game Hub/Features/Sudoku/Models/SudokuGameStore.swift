@@ -4,12 +4,13 @@ enum SudokuGameStore {
     private static let savedGameKey = "sudoku.savedGame"
 
     static func save(
-        _ game: SudokuSavedGame
+        _ game: SudokuSavedGame,
+        defaults: UserDefaults = .standard
     ) {
         do {
             let data = try JSONEncoder().encode(game)
 
-            UserDefaults.standard.set(
+            defaults.set(
                 data,
                 forKey: savedGameKey
             )
@@ -20,9 +21,11 @@ enum SudokuGameStore {
         }
     }
 
-    static func load() -> SudokuSavedGame? {
+    static func load(
+        defaults: UserDefaults = .standard
+    ) -> SudokuSavedGame? {
         guard
-            let data = UserDefaults.standard.data(
+            let data = defaults.data(
                 forKey: savedGameKey
             )
         else {
@@ -43,14 +46,18 @@ enum SudokuGameStore {
         }
     }
 
-    static func clear() {
-        UserDefaults.standard.removeObject(
+    static func clear(
+        defaults: UserDefaults = .standard
+    ) {
+        defaults.removeObject(
             forKey: savedGameKey
         )
     }
 
-    static var hasSavedGame: Bool {
-        UserDefaults.standard.data(
+    static func hasSavedGame(
+        defaults: UserDefaults = .standard
+    ) -> Bool {
+        defaults.data(
             forKey: savedGameKey
         ) != nil
     }

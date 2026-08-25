@@ -165,6 +165,9 @@ struct SudokuView: View {
                 viewModel.saveCurrentGame()
             }
         }
+        .onDisappear {
+            viewModel.saveCurrentGame()
+        }
         .confirmationDialog(
             "Start a New Game?",
             isPresented: $showingNewGameConfirmation,

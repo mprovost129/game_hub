@@ -21,18 +21,30 @@ final class SudokuViewModel {
     var isCompleted = false
 
     private var undoStack: [SudokuSnapshot] = []
+    private let gameDefaults: UserDefaults
+    private let statisticsDefaults: UserDefaults
 
     init(
-        difficulty: SudokuDifficulty = .easy
+        difficulty: SudokuDifficulty = .easy,
+        gameDefaults: UserDefaults = .standard,
+        statisticsDefaults: UserDefaults = .standard
     ) {
         self.difficulty = difficulty
+        self.gameDefaults = gameDefaults
+        self.statisticsDefaults = statisticsDefaults
         self.puzzle = SudokuPuzzleLibrary.randomPuzzle(
             for: difficulty
         )
     }
 
-    init(savedGame: SudokuSavedGame) {
+    init(
+        savedGame: SudokuSavedGame,
+        gameDefaults: UserDefaults = .standard,
+        statisticsDefaults: UserDefaults = .standard
+    ) {
         self.difficulty = savedGame.difficulty
+        self.gameDefaults = gameDefaults
+        self.statisticsDefaults = statisticsDefaults
         self.puzzle = savedGame.puzzle
         self.mistakeCount = savedGame.mistakeCount
         self.hintCount = savedGame.hintCount
@@ -253,7 +265,9 @@ final class SudokuViewModel {
             puzzle.cells[index].notes.removeAll()
         }
 
-        checkForCompletion()
+        checkForCompletion(
+            recordStatistics: false
+        )
     }
 
     func useHint() {
@@ -282,7 +296,9 @@ final class SudokuViewModel {
     }
 
     func startNewGame() {
-        SudokuGameStore.clear()
+        SudokuGameStore.clear(
+            defaults: gameDefaults
+        )
 
         puzzle = SudokuPuzzleLibrary.randomPuzzle(
             for: difficulty
@@ -301,7 +317,9 @@ final class SudokuViewModel {
     }
 
     func endGame() {
-        SudokuGameStore.clear()
+        SudokuGameStore.clear(
+            defaults: gameDefaults
+        )
         isPaused = false
     }
 
@@ -328,7 +346,9 @@ final class SudokuViewModel {
         }
     }
 
-    private func checkForCompletion() {
+    private func checkForCompletion(
+        recordStatistics: Bool = true
+    ) {
         guard !isCompleted else {
             return
         }
@@ -341,13 +361,20 @@ final class SudokuViewModel {
             isCompleted = true
             isPaused = false
 
-            SudokuGameStore.clear()
-            recordCompletedGame()
+            SudokuGameStore.clear(
+                defaults: gameDefaults
+            )
+
+            if recordStatistics {
+                recordCompletedGame()
+            }
         }
     }
 
     private func recordCompletedGame() {
-        var statistics = SudokuStatisticsStore.load()
+        var statistics = SudokuStatisticsStore.load(
+            defaults: statisticsDefaults
+        )
 
         statistics.gamesCompleted += 1
         statistics.totalMistakes += mistakeCount
@@ -374,7 +401,8 @@ final class SudokuViewModel {
         }
 
         SudokuStatisticsStore.save(
-            statistics
+            statistics,
+            defaults: statisticsDefaults
         )
     }
 
@@ -397,7 +425,9 @@ final class SudokuViewModel {
         }
 
         guard !puzzle.cells.allSatisfy({ $0.value == $0.solution }) else {
-            SudokuGameStore.clear()
+            SudokuGameStore.clear(
+                defaults: gameDefaults
+            )
             return
         }
 
@@ -411,6 +441,9 @@ final class SudokuViewModel {
             isNotesMode: isNotesMode
         )
 
-        SudokuGameStore.save(savedGame)
+        SudokuGameStore.save(
+            savedGame,
+            defaults: gameDefaults
+        )
     }
 }
