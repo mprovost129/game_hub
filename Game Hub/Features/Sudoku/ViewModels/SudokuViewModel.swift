@@ -233,6 +233,24 @@ final class SudokuViewModel {
         checkForCompletion()
     }
 
+    func startNewGame() {
+        puzzle = SudokuPuzzleLibrary.randomPuzzle(
+            for: difficulty
+        )
+
+        selectedCellID = nil
+        mistakeCount = 0
+        elapsedSeconds = 0
+        isPaused = false
+        isCompleted = false
+        isNotesMode = false
+        undoStack.removeAll()
+    }
+
+    func endGame() {
+        isPaused = false
+    }
+
     private func saveUndoSnapshot() {
         undoStack.append(
             SudokuSnapshot(

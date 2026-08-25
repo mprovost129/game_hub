@@ -254,6 +254,48 @@ struct Game_HubTests {
         #expect(viewModel.puzzle.cells.allSatisfy { $0.value == $0.solution })
     }
 
+    @Test func startNewGameResetsSessionState() throws {
+        let viewModel = SudokuViewModel(difficulty: .medium)
+        let cell = try firstEmptyCell(in: viewModel)
+
+        viewModel.selectCell(cell)
+        viewModel.toggleNotesMode()
+        viewModel.enterNumber(2)
+        viewModel.toggleNotesMode()
+        viewModel.enterNumber(wrongValue(for: cell))
+        viewModel.advanceTimer()
+        viewModel.togglePause()
+
+        #expect(viewModel.selectedCellID != nil)
+        #expect(viewModel.mistakeCount == 1)
+        #expect(viewModel.elapsedSeconds == 1)
+        #expect(viewModel.isPaused)
+        #expect(viewModel.canUndo)
+
+        viewModel.startNewGame()
+
+        #expect(viewModel.difficulty == .medium)
+        #expect(viewModel.puzzle.cells.count == 81)
+        #expect(viewModel.selectedCellID == nil)
+        #expect(viewModel.mistakeCount == 0)
+        #expect(viewModel.elapsedSeconds == 0)
+        #expect(!viewModel.isPaused)
+        #expect(!viewModel.isCompleted)
+        #expect(!viewModel.isNotesMode)
+        #expect(!viewModel.canUndo)
+    }
+
+    @Test func endGameClearsPausedState() {
+        let viewModel = SudokuViewModel()
+
+        viewModel.togglePause()
+        #expect(viewModel.isPaused)
+
+        viewModel.endGame()
+
+        #expect(!viewModel.isPaused)
+    }
+
     private func firstEmptyCell(in viewModel: SudokuViewModel) throws -> SudokuCell {
         try #require(viewModel.puzzle.cells.first { !$0.isGiven })
     }

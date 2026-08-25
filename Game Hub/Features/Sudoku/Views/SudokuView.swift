@@ -7,6 +7,8 @@ struct SudokuView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var viewModel: SudokuViewModel
+    @State private var showingNewGameConfirmation = false
+    @State private var showingEndGameConfirmation = false
     @State private var timer = Timer.publish(
         every: 1,
         on: .main,
@@ -105,13 +107,90 @@ struct SudokuView: View {
         .padding()
         .navigationTitle("Sudoku")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(
+                placement: .topBarTrailing
+            ) {
+                Menu {
+                    Button {
+                        showingNewGameConfirmation = true
+                    } label: {
+                        Label(
+                            "New Game",
+                            systemImage: "arrow.clockwise"
+                        )
+                    }
+
+                    Button(
+                        role: .destructive
+                    ) {
+                        showingEndGameConfirmation = true
+                    } label: {
+                        Label(
+                            "End Game",
+                            systemImage: "xmark.circle"
+                        )
+                    }
+                } label: {
+                    Image(
+                        systemName: "ellipsis.circle"
+                    )
+                }
+            }
+        }
         .onReceive(timer) { _ in
             viewModel.advanceTimer()
+        }
+        .confirmationDialog(
+            "Start a New Game?",
+            isPresented: $showingNewGameConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Start New Game") {
+                viewModel.startNewGame()
+            }
+
+            Button(
+                "Cancel",
+                role: .cancel
+            ) {
+            }
+        } message: {
+            Text(
+                "Your progress in the current puzzle will be lost."
+            )
+        }
+        .confirmationDialog(
+            "End Current Game?",
+            isPresented: $showingEndGameConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button(
+                "End Game",
+                role: .destructive
+            ) {
+                viewModel.endGame()
+                dismiss()
+            }
+
+            Button(
+                "Cancel",
+                role: .cancel
+            ) {
+            }
+        } message: {
+            Text(
+                "Your progress in the current puzzle will be lost."
+            )
         }
         .sheet(isPresented: $viewModel.isCompleted) {
             SudokuCompletionView(
                 time: viewModel.formattedTime,
                 mistakes: viewModel.mistakeCount,
+                onNewGame: {
+                    viewModel.isCompleted = false
+                    viewModel.startNewGame()
+                },
                 onDone: {
                     viewModel.isCompleted = false
                     dismiss()

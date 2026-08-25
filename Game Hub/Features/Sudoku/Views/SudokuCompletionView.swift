@@ -3,6 +3,7 @@ import SwiftUI
 struct SudokuCompletionView: View {
     let time: String
     let mistakes: Int
+    let onNewGame: () -> Void
     let onDone: () -> Void
 
     var body: some View {
@@ -47,15 +48,27 @@ struct SudokuCompletionView: View {
                 }
             }
 
-            Button {
-                onDone()
-            } label: {
-                Text("Done")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 50)
+            VStack(spacing: 12) {
+                Button {
+                    onNewGame()
+                } label: {
+                    Text("New Game")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 50)
+                }
+                .buttonStyle(.borderedProminent)
+
+                Button {
+                    onDone()
+                } label: {
+                    Text("Done")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 50)
+                }
+                .buttonStyle(.bordered)
             }
-            .buttonStyle(.borderedProminent)
         }
         .padding(32)
     }
@@ -65,6 +78,7 @@ struct SudokuCompletionView: View {
     SudokuCompletionView(
         time: "08:24",
         mistakes: 2,
+        onNewGame: {},
         onDone: {}
     )
 }
