@@ -54,7 +54,7 @@ struct HangmanView: View {
             )
 
             Text(
-                "\(viewModel.game.remainingGuesses) guesses remaining"
+                remainingGuessesText
             )
             .font(.subheadline)
             .foregroundStyle(.secondary)
@@ -152,6 +152,12 @@ struct HangmanView: View {
         .onDisappear {
             viewModel.saveCurrentGame()
         }
+    }
+
+    private var remainingGuessesText: String {
+        viewModel.game.remainingGuesses == 1
+        ? "1 guess remaining"
+        : "\(viewModel.game.remainingGuesses) guesses remaining"
     }
 }
 
