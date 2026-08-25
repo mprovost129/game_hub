@@ -8,6 +8,8 @@ enum HangmanGameStatus: Equatable {
 
 struct HangmanGame {
     let word: String
+    let category: HangmanCategory
+
     var guessedLetters: Set<Character> = []
 
     let maximumWrongGuesses = 6

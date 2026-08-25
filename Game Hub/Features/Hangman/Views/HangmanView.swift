@@ -1,16 +1,38 @@
 import SwiftUI
 
 struct HangmanView: View {
-    @State private var viewModel =
-        HangmanViewModel()
+    let category: HangmanCategory
+
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var viewModel: HangmanViewModel
+    @State private var showingEndGameConfirmation = false
+
+    init(
+        category: HangmanCategory
+    ) {
+        self.category = category
+
+        _viewModel = State(
+            initialValue: HangmanViewModel(
+                category: category
+            )
+        )
+    }
 
     var body: some View {
         VStack(spacing: 28) {
             Spacer()
 
-            Text("Guess the Word")
-                .font(.title2)
-                .fontWeight(.bold)
+            VStack(spacing: 4) {
+                Text("Guess the Word")
+                    .font(.title2)
+                    .fontWeight(.bold)
+
+                Text(viewModel.game.category.rawValue)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
 
             HangmanFigureView(
                 wrongGuessCount:
@@ -31,8 +53,6 @@ struct HangmanView: View {
                     viewModel.game.guessedLetters
             )
 
-            gameStatusMessage
-
             Spacer()
 
             HangmanKeyboardView(
@@ -50,44 +70,76 @@ struct HangmanView: View {
         .padding()
         .navigationTitle("Hangman")
         .navigationBarTitleDisplayMode(.inline)
-    }
-
-    @ViewBuilder
-    private var gameStatusMessage: some View {
-        switch viewModel.game.status {
-        case .playing:
-            EmptyView()
-
-        case .won:
-            VStack(spacing: 6) {
-                Image(systemName: "checkmark.circle.fill")
-                    .font(.title)
-                    .foregroundStyle(.green)
-
-                Text("You got it!")
-                    .font(.headline)
+        .toolbar {
+            ToolbarItem(
+                placement: .topBarTrailing
+            ) {
+                Menu {
+                    Button(
+                        role: .destructive
+                    ) {
+                        showingEndGameConfirmation = true
+                    } label: {
+                        Label(
+                            "End Game",
+                            systemImage: "xmark.circle"
+                        )
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                }
+            }
+        }
+        .sheet(
+            isPresented: Binding(
+                get: {
+                    viewModel.game.status != .playing
+                },
+                set: { _ in }
+            )
+        ) {
+            HangmanCompletionView(
+                didWin: viewModel.game.status == .won,
+                word: viewModel.game.normalizedWord,
+                wrongGuesses: viewModel.game.wrongGuessCount,
+                onNewGame: {
+                    viewModel.startNewGame()
+                },
+                onDone: {
+                    dismiss()
+                }
+            )
+            .interactiveDismissDisabled()
+        }
+        .confirmationDialog(
+            "End Current Game?",
+            isPresented: $showingEndGameConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button(
+                "End Game",
+                role: .destructive
+            ) {
+                dismiss()
             }
 
-        case .lost:
-            VStack(spacing: 6) {
-                Image(systemName: "xmark.circle.fill")
-                    .font(.title)
-                    .foregroundStyle(.red)
-
-                Text("Game Over")
-                    .font(.headline)
-
-                Text(
-                    "The word was \(viewModel.game.normalizedWord)."
-                )
-                .foregroundStyle(.secondary)
+            Button(
+                "Cancel",
+                role: .cancel
+            ) {
             }
+        } message: {
+            Text(
+                "Your current Hangman game will be lost."
+            )
         }
     }
 }
 
 #Preview {
     NavigationStack {
-        HangmanView()
+        HangmanView(
+            category: .animals
+        )
     }
 }
