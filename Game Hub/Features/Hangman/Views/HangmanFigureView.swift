@@ -25,19 +25,10 @@ struct HangmanFigureView: View {
                     )
 
                     if wrongGuessCount >= 1 {
-                        Circle()
-                            .stroke(
-                                Color.primary,
-                                lineWidth: 4
-                            )
-                            .frame(
-                                width: width * 0.18,
-                                height: width * 0.18
-                            )
-                            .position(
-                                x: width * 0.68,
-                                y: height * 0.28
-                            )
+                        headView(
+                            width: width,
+                            height: height
+                        )
                     }
 
                     if wrongGuessCount >= 2 {
@@ -47,10 +38,7 @@ struct HangmanFigureView: View {
                         )
                         .stroke(
                             Color.primary,
-                            style: StrokeStyle(
-                                lineWidth: 4,
-                                lineCap: .round
-                            )
+                            style: bodyStroke
                         )
                     }
 
@@ -61,10 +49,7 @@ struct HangmanFigureView: View {
                         )
                         .stroke(
                             Color.primary,
-                            style: StrokeStyle(
-                                lineWidth: 4,
-                                lineCap: .round
-                            )
+                            style: bodyStroke
                         )
                     }
 
@@ -75,10 +60,7 @@ struct HangmanFigureView: View {
                         )
                         .stroke(
                             Color.primary,
-                            style: StrokeStyle(
-                                lineWidth: 4,
-                                lineCap: .round
-                            )
+                            style: bodyStroke
                         )
                     }
 
@@ -89,10 +71,7 @@ struct HangmanFigureView: View {
                         )
                         .stroke(
                             Color.primary,
-                            style: StrokeStyle(
-                                lineWidth: 4,
-                                lineCap: .round
-                            )
+                            style: bodyStroke
                         )
                     }
 
@@ -103,10 +82,7 @@ struct HangmanFigureView: View {
                         )
                         .stroke(
                             Color.primary,
-                            style: StrokeStyle(
-                                lineWidth: 4,
-                                lineCap: .round
-                            )
+                            style: bodyStroke
                         )
                     }
                 }
@@ -121,11 +97,25 @@ struct HangmanFigureView: View {
         }
     }
 
+    private var bodyStroke: StrokeStyle {
+        StrokeStyle(
+            lineWidth: 4,
+            lineCap: .round,
+            lineJoin: .round
+        )
+    }
+
+    // MARK: - Gallows
+
     private func gallowsPath(
         width: CGFloat,
         height: CGFloat
     ) -> Path {
         var path = Path()
+
+        let uprightX = width * 0.28
+        let beamY = height * 0.08
+        let ropeX = width * 0.68
 
         // Base
         path.move(
@@ -134,6 +124,7 @@ struct HangmanFigureView: View {
                 y: height * 0.92
             )
         )
+
         path.addLine(
             to: CGPoint(
                 x: width * 0.48,
@@ -144,35 +135,64 @@ struct HangmanFigureView: View {
         // Upright
         path.move(
             to: CGPoint(
-                x: width * 0.28,
+                x: uprightX,
                 y: height * 0.92
             )
         )
+
         path.addLine(
             to: CGPoint(
-                x: width * 0.28,
-                y: height * 0.08
+                x: uprightX,
+                y: beamY
             )
         )
 
         // Top beam
         path.addLine(
             to: CGPoint(
-                x: width * 0.68,
-                y: height * 0.08
+                x: ropeX,
+                y: beamY
             )
         )
 
         // Rope
+        //
+        // This stops exactly at the top of the head.
         path.addLine(
             to: CGPoint(
-                x: width * 0.68,
-                y: height * 0.18
+                x: ropeX,
+                y: height * 0.215
             )
         )
 
         return path
     }
+
+    // MARK: - Head
+
+    @ViewBuilder
+    private func headView(
+        width: CGFloat,
+        height: CGFloat
+    ) -> some View {
+        let headDiameter = width * 0.12
+
+        Circle()
+            .stroke(
+                Color.primary,
+                lineWidth: 4
+            )
+            .frame(
+                width: headDiameter,
+                height: headDiameter
+            )
+            .position(
+                x: width * 0.68,
+                y: height * 0.275
+            )
+    }
+
+    // MARK: - Body
 
     private func bodyPath(
         width: CGFloat,
@@ -180,10 +200,11 @@ struct HangmanFigureView: View {
     ) -> Path {
         var path = Path()
 
+        // Starts at bottom center of head.
         path.move(
             to: CGPoint(
                 x: width * 0.68,
-                y: height * 0.38
+                y: height * 0.335
             )
         )
 
@@ -197,6 +218,8 @@ struct HangmanFigureView: View {
         return path
     }
 
+    // MARK: - Arms
+
     private func leftArmPath(
         width: CGFloat,
         height: CGFloat
@@ -206,14 +229,14 @@ struct HangmanFigureView: View {
         path.move(
             to: CGPoint(
                 x: width * 0.68,
-                y: height * 0.46
+                y: height * 0.40
             )
         )
 
         path.addLine(
             to: CGPoint(
                 x: width * 0.56,
-                y: height * 0.56
+                y: height * 0.52
             )
         )
 
@@ -229,19 +252,21 @@ struct HangmanFigureView: View {
         path.move(
             to: CGPoint(
                 x: width * 0.68,
-                y: height * 0.46
+                y: height * 0.40
             )
         )
 
         path.addLine(
             to: CGPoint(
                 x: width * 0.80,
-                y: height * 0.56
+                y: height * 0.52
             )
         )
 
         return path
     }
+
+    // MARK: - Legs
 
     private func leftLegPath(
         width: CGFloat,
@@ -259,7 +284,7 @@ struct HangmanFigureView: View {
         path.addLine(
             to: CGPoint(
                 x: width * 0.58,
-                y: height * 0.80
+                y: height * 0.82
             )
         )
 
@@ -282,7 +307,7 @@ struct HangmanFigureView: View {
         path.addLine(
             to: CGPoint(
                 x: width * 0.78,
-                y: height * 0.80
+                y: height * 0.82
             )
         )
 
@@ -291,16 +316,20 @@ struct HangmanFigureView: View {
 }
 
 #Preview {
-    VStack(spacing: 30) {
-        HangmanFigureView(
-            wrongGuessCount: 0,
-            maximumWrongGuesses: 6
-        )
+    ScrollView {
+        VStack(spacing: 32) {
+            ForEach(0...6, id: \.self) { stage in
+                VStack(spacing: 8) {
+                    Text("\(stage) wrong")
+                        .font(.headline)
 
-        HangmanFigureView(
-            wrongGuessCount: 6,
-            maximumWrongGuesses: 6
-        )
+                    HangmanFigureView(
+                        wrongGuessCount: stage,
+                        maximumWrongGuesses: 6
+                    )
+                }
+            }
+        }
+        .padding()
     }
-    .padding()
 }
