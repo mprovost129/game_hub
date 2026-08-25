@@ -192,7 +192,8 @@ struct HomeView: View {
     private func gameDestination(
         for game: GameDefinition
     ) -> some View {
-        if game.id == GameDefinition.sudoku.id {
+        switch game.id {
+        case GameDefinition.sudoku.id:
             NavigationLink {
                 SudokuStartView()
             } label: {
@@ -201,7 +202,18 @@ struct HomeView: View {
                 )
             }
             .buttonStyle(.plain)
-        } else {
+
+        case GameDefinition.hangman.id:
+            NavigationLink {
+                HangmanStartView()
+            } label: {
+                GameCardView(
+                    game: game
+                )
+            }
+            .buttonStyle(.plain)
+
+        default:
             GameCardView(
                 game: game
             )

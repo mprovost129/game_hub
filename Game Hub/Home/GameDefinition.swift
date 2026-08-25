@@ -37,9 +37,9 @@ extension GameDefinition {
     static let hangman = GameDefinition(
         id: "hangman",
         title: "Hangman",
-        subtitle: "Coming soon",
+        subtitle: "Classic word guessing",
         systemImage: "character.textbox",
-        availability: .comingSoon
+        availability: .available
     )
 
     static let numberGame = GameDefinition(
