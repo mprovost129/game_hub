@@ -1,35 +1,68 @@
 import SwiftUI
 
 struct HomeView: View {
+    private let columns = [
+        GridItem(
+            .flexible(),
+            spacing: 16
+        ),
+        GridItem(
+            .flexible(),
+            spacing: 16
+        )
+    ]
+
     var body: some View {
         NavigationStack {
-            VStack(spacing: 24) {
-                Spacer()
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    header
 
-                Text("Game Hub")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-
-                Text("Classic games. One app.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-
-                Spacer()
-
-                NavigationLink {
-                    SudokuStartView()
-                } label: {
-                    Text("Start Game")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding()
+                    LazyVGrid(
+                        columns: columns,
+                        spacing: 16
+                    ) {
+                        ForEach(GameDefinition.allGames) { game in
+                            gameDestination(for: game)
+                        }
+                    }
                 }
-                .buttonStyle(.borderedProminent)
-
-                Spacer()
-                    .frame(height: 40)
+                .padding()
             }
-            .padding()
+            .navigationBarHidden(true)
+        }
+    }
+
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Game Hub")
+                .font(.largeTitle)
+                .fontWeight(.bold)
+
+            Text("Pick a game and start playing.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        }
+        .padding(.top, 12)
+    }
+
+    @ViewBuilder
+    private func gameDestination(
+        for game: GameDefinition
+    ) -> some View {
+        if game.id == GameDefinition.sudoku.id {
+            NavigationLink {
+                SudokuStartView()
+            } label: {
+                GameCardView(
+                    game: game
+                )
+            }
+            .buttonStyle(.plain)
+        } else {
+            GameCardView(
+                game: game
+            )
         }
     }
 }
