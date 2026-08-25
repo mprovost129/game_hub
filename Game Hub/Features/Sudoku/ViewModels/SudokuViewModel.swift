@@ -23,6 +23,7 @@ final class SudokuViewModel {
     private var undoStack: [SudokuSnapshot] = []
     private let gameDefaults: UserDefaults
     private let statisticsDefaults: UserDefaults
+    private var shouldPersistGame = true
 
     init(
         difficulty: SudokuDifficulty = .easy,
@@ -296,6 +297,8 @@ final class SudokuViewModel {
     }
 
     func startNewGame() {
+        shouldPersistGame = true
+
         SudokuGameStore.clear(
             defaults: gameDefaults
         )
@@ -317,6 +320,8 @@ final class SudokuViewModel {
     }
 
     func endGame() {
+        shouldPersistGame = false
+
         SudokuGameStore.clear(
             defaults: gameDefaults
         )
@@ -358,6 +363,7 @@ final class SudokuViewModel {
         }
 
         if solved {
+            shouldPersistGame = false
             isCompleted = true
             isPaused = false
 
@@ -420,6 +426,10 @@ final class SudokuViewModel {
     }
 
     private func saveGame() {
+        guard shouldPersistGame else {
+            return
+        }
+
         guard !isCompleted else {
             return
         }

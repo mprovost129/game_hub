@@ -165,6 +165,9 @@ struct SudokuView: View {
                 viewModel.saveCurrentGame()
             }
         }
+        .onAppear {
+            viewModel.saveCurrentGame()
+        }
         .onDisappear {
             viewModel.saveCurrentGame()
         }

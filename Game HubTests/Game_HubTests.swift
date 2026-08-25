@@ -535,15 +535,29 @@ struct Game_HubTests {
         #expect(!viewModel.canUndo)
     }
 
-    @Test func endGameClearsPausedState() {
-        let viewModel = makeViewModel()
+    @Test func endGameClearsPausedStateAndPreventsFutureSaves() {
+        let gameDefaults = isolatedDefaults()
+        let viewModel = makeViewModel(
+            gameDefaults: gameDefaults
+        )
 
         viewModel.togglePause()
         #expect(viewModel.isPaused)
+        #expect(
+            SudokuGameStore.hasSavedGame(
+                defaults: gameDefaults
+            )
+        )
 
         viewModel.endGame()
+        viewModel.saveCurrentGame()
 
         #expect(!viewModel.isPaused)
+        #expect(
+            !SudokuGameStore.hasSavedGame(
+                defaults: gameDefaults
+            )
+        )
     }
 
     private func firstEmptyCell(in viewModel: SudokuViewModel) throws -> SudokuCell {
