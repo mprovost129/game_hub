@@ -1,8 +1,17 @@
+import Combine
 import SwiftUI
 
 struct WordGridView: View {
+    @Environment(\.dismiss) private var dismiss
+
     @State private var viewModel =
         WordGridViewModel()
+    @State private var timer = Timer.publish(
+        every: 1,
+        on: .main,
+        in: .common
+    ).autoconnect()
+    @State private var showingEndRoundConfirmation = false
 
     var body: some View {
         VStack(spacing: 24) {
@@ -18,6 +27,19 @@ struct WordGridView: View {
                     Text("\(viewModel.score)")
                         .font(.title2)
                         .fontWeight(.bold)
+                }
+
+                Spacer()
+
+                VStack(spacing: 2) {
+                    Text("TIME")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+
+                    Text(viewModel.formattedTimeRemaining)
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .monospacedDigit()
                 }
 
                 Spacer()
@@ -100,6 +122,66 @@ struct WordGridView: View {
         .padding()
         .navigationTitle("Word Grid")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(
+                placement: .topBarTrailing
+            ) {
+                Menu {
+                    Button {
+                        showingEndRoundConfirmation = true
+                    } label: {
+                        Label(
+                            "End Round",
+                            systemImage: "stop.circle"
+                        )
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                }
+            }
+        }
+        .confirmationDialog(
+            "End Current Round?",
+            isPresented: $showingEndRoundConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button(
+                "End Round",
+                role: .destructive
+            ) {
+                viewModel.finishRound()
+            }
+
+            Button(
+                "Cancel",
+                role: .cancel
+            ) {
+            }
+        } message: {
+            Text(
+                "Your current score will be final."
+            )
+        }
+        .sheet(
+            isPresented: $viewModel.isRoundComplete
+        ) {
+            WordGridCompletionView(
+                score: viewModel.score,
+                words: viewModel.submittedWords,
+                onNewGame: {
+                    viewModel.isRoundComplete = false
+                    viewModel.startNewGame()
+                },
+                onDone: {
+                    viewModel.isRoundComplete = false
+                    dismiss()
+                }
+            )
+            .interactiveDismissDisabled()
+        }
+        .onReceive(timer) { _ in
+            viewModel.advanceTimer()
+        }
     }
 
     @ViewBuilder

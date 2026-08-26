@@ -209,6 +209,56 @@ struct WordGridTests {
         #expect(viewModel.score == 23)
     }
 
+    @Test func timerFinishesRoundAtDuration() {
+        let viewModel = makeTestViewModel()
+        viewModel.roundDuration = 2
+
+        viewModel.advanceTimer()
+
+        #expect(viewModel.elapsedSeconds == 1)
+        #expect(viewModel.remainingSeconds == 1)
+        #expect(!viewModel.isRoundComplete)
+
+        viewModel.advanceTimer()
+
+        #expect(viewModel.elapsedSeconds == 2)
+        #expect(viewModel.remainingSeconds == 0)
+        #expect(viewModel.formattedTimeRemaining == "00:00")
+        #expect(viewModel.isRoundComplete)
+    }
+
+    @Test func finishingRoundClearsSelectionAndBlocksGameplay() throws {
+        let viewModel = makeTestViewModel()
+
+        viewModel.selectCell(try cell(at: 0, in: viewModel))
+        viewModel.finishRound()
+        viewModel.selectCell(try cell(at: 1, in: viewModel))
+        viewModel.submitCurrentWord()
+
+        #expect(viewModel.isRoundComplete)
+        #expect(viewModel.currentWord.isEmpty)
+        #expect(viewModel.submittedWords.isEmpty)
+        #expect(viewModel.score == 0)
+    }
+
+    @Test func startNewGameResetsRoundState() throws {
+        let viewModel = makeTestViewModel()
+
+        try selectCAT(in: viewModel)
+        viewModel.submitCurrentWord()
+        viewModel.elapsedSeconds = 90
+        viewModel.finishRound()
+
+        viewModel.startNewGame()
+
+        #expect(!viewModel.isRoundComplete)
+        #expect(viewModel.elapsedSeconds == 0)
+        #expect(viewModel.score == 0)
+        #expect(viewModel.submittedWords.isEmpty)
+        #expect(viewModel.selectedCellIDs.isEmpty)
+        #expect(viewModel.lastSubmissionResult == nil)
+    }
+
     @Test func petIsAcceptedAsValidWord() {
         let dictionary = LocalWordGridDictionary(
             words: WordGridWordLibrary.developmentWords

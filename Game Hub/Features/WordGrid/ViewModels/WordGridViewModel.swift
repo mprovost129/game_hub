@@ -8,6 +8,9 @@ final class WordGridViewModel {
     var selectedCellIDs: [UUID] = []
     var submittedWords: [String] = []
     var score = 0
+    var elapsedSeconds = 0
+    var roundDuration = 120
+    var isRoundComplete = false
 
     var lastSubmissionResult:
         WordGridSubmissionResult?
@@ -47,6 +50,21 @@ final class WordGridViewModel {
         )
     }
 
+    var remainingSeconds: Int {
+        max(roundDuration - elapsedSeconds, 0)
+    }
+
+    var formattedTimeRemaining: String {
+        let minutes = remainingSeconds / 60
+        let seconds = remainingSeconds % 60
+
+        return String(
+            format: "%02d:%02d",
+            minutes,
+            seconds
+        )
+    }
+
     func isSelected(
         _ cell: WordGridCell
     ) -> Bool {
@@ -56,6 +74,10 @@ final class WordGridViewModel {
     func selectCell(
         _ cell: WordGridCell
     ) {
+        guard !isRoundComplete else {
+            return
+        }
+
         guard !isSelected(cell) else {
             return
         }
@@ -70,6 +92,10 @@ final class WordGridViewModel {
     func selectCellDuringDrag(
         _ cell: WordGridCell
     ) {
+        guard !isRoundComplete else {
+            return
+        }
+
         // Ignore repeated drag updates over the current final tile.
         if selectedCellIDs.last == cell.id {
             return
@@ -100,6 +126,10 @@ final class WordGridViewModel {
     }
 
     func submitCurrentWord() {
+        guard !isRoundComplete else {
+            return
+        }
+
         let word = currentWord.uppercased()
 
         guard word.count >= 3 else {
@@ -131,6 +161,40 @@ final class WordGridViewModel {
         )
 
         clearSelection()
+    }
+
+    func advanceTimer() {
+        guard !isRoundComplete else {
+            return
+        }
+
+        elapsedSeconds += 1
+
+        if elapsedSeconds >= roundDuration {
+            finishRound()
+        }
+    }
+
+    func finishRound() {
+        guard !isRoundComplete else {
+            return
+        }
+
+        isRoundComplete = true
+        clearSelection()
+    }
+
+    func startNewGame() {
+        game = WordGridBoardGenerator.randomPlayableGame(
+            dictionary: dictionary
+        )
+
+        selectedCellIDs.removeAll()
+        submittedWords.removeAll()
+        score = 0
+        lastSubmissionResult = nil
+        elapsedSeconds = 0
+        isRoundComplete = false
     }
 
     private func canSelect(
