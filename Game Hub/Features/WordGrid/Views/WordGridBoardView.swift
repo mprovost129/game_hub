@@ -15,31 +15,35 @@ struct WordGridBoardView: View {
     )
 
     var body: some View {
-        LazyVGrid(
-            columns: columns,
-            spacing: 10
-        ) {
-            ForEach(
-                viewModel.game.cells
-            ) { cell in
-                cellView(cell)
-                    .background {
-                        GeometryReader { geometry in
-                            Color.clear
-                                .preference(
-                                    key:
-                                        WordGridCellFramePreferenceKey.self,
-                                    value: [
-                                        cell.id:
-                                            geometry.frame(
-                                                in: .named(
-                                                    "wordGrid"
+        ZStack {
+            selectionPath
+
+            LazyVGrid(
+                columns: columns,
+                spacing: 10
+            ) {
+                ForEach(
+                    viewModel.game.cells
+                ) { cell in
+                    cellView(cell)
+                        .background {
+                            GeometryReader { geometry in
+                                Color.clear
+                                    .preference(
+                                        key:
+                                            WordGridCellFramePreferenceKey.self,
+                                        value: [
+                                            cell.id:
+                                                geometry.frame(
+                                                    in: .named(
+                                                        "wordGrid"
+                                                    )
                                                 )
-                                            )
-                                    ]
-                                )
+                                        ]
+                                    )
+                            }
                         }
-                    }
+                }
             }
         }
         .coordinateSpace(
@@ -64,6 +68,51 @@ struct WordGridBoardView: View {
                 )
             }
         )
+    }
+
+    private var selectionPath: some View {
+        Canvas { context, _ in
+            let points = viewModel.selectedCellIDs
+                .compactMap { id -> CGPoint? in
+                    guard let frame = cellFrames[id] else {
+                        return nil
+                    }
+
+                    return CGPoint(
+                        x: frame.midX,
+                        y: frame.midY
+                    )
+                }
+
+            guard points.count >= 2 else {
+                return
+            }
+
+            var path = Path()
+
+            path.move(
+                to: points[0]
+            )
+
+            for point in points.dropFirst() {
+                path.addLine(
+                    to: point
+                )
+            }
+
+            context.stroke(
+                path,
+                with: .color(
+                    Color.accentColor.opacity(0.55)
+                ),
+                style: StrokeStyle(
+                    lineWidth: 8,
+                    lineCap: .round,
+                    lineJoin: .round
+                )
+            )
+        }
+        .allowsHitTesting(false)
     }
 
     private func cellView(
