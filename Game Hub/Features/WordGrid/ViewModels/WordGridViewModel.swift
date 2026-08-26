@@ -48,6 +48,34 @@ final class WordGridViewModel {
         selectedCellIDs.append(cell.id)
     }
 
+    func selectCellDuringDrag(
+        _ cell: WordGridCell
+    ) {
+        // Ignore repeated drag updates over the current final tile.
+        if selectedCellIDs.last == cell.id {
+            return
+        }
+
+        // Dragging backward one tile removes the current final tile.
+        if selectedCellIDs.count >= 2,
+           selectedCellIDs[
+                selectedCellIDs.count - 2
+           ] == cell.id {
+            selectedCellIDs.removeLast()
+            return
+        }
+
+        guard !isSelected(cell) else {
+            return
+        }
+
+        guard canSelect(cell) else {
+            return
+        }
+
+        selectedCellIDs.append(cell.id)
+    }
+
     func clearSelection() {
         selectedCellIDs.removeAll()
     }

@@ -65,6 +65,57 @@ struct WordGridTests {
         #expect(viewModel.selectedCellIDs.isEmpty)
     }
 
+    @Test func dragSelectionBuildsCurrentWord() throws {
+        let viewModel = WordGridViewModel()
+
+        viewModel.selectCellDuringDrag(try cell(at: 0, in: viewModel))
+        viewModel.selectCellDuringDrag(try cell(at: 1, in: viewModel))
+        viewModel.selectCellDuringDrag(try cell(at: 2, in: viewModel))
+
+        #expect(viewModel.currentWord == "CAT")
+    }
+
+    @Test func dragSelectionIgnoresRepeatedFinalCell() throws {
+        let viewModel = WordGridViewModel()
+
+        viewModel.selectCellDuringDrag(try cell(at: 0, in: viewModel))
+        viewModel.selectCellDuringDrag(try cell(at: 1, in: viewModel))
+        viewModel.selectCellDuringDrag(try cell(at: 1, in: viewModel))
+
+        #expect(viewModel.currentWord == "CA")
+    }
+
+    @Test func draggingBackwardToPreviousCellRemovesFinalCell() throws {
+        let viewModel = WordGridViewModel()
+
+        viewModel.selectCellDuringDrag(try cell(at: 0, in: viewModel))
+        viewModel.selectCellDuringDrag(try cell(at: 1, in: viewModel))
+        viewModel.selectCellDuringDrag(try cell(at: 2, in: viewModel))
+        viewModel.selectCellDuringDrag(try cell(at: 1, in: viewModel))
+
+        #expect(viewModel.currentWord == "CA")
+    }
+
+    @Test func dragSelectionCannotReuseEarlierCell() throws {
+        let viewModel = WordGridViewModel()
+
+        viewModel.selectCellDuringDrag(try cell(at: 0, in: viewModel))
+        viewModel.selectCellDuringDrag(try cell(at: 1, in: viewModel))
+        viewModel.selectCellDuringDrag(try cell(at: 5, in: viewModel))
+        viewModel.selectCellDuringDrag(try cell(at: 0, in: viewModel))
+
+        #expect(viewModel.currentWord == "CAE")
+    }
+
+    @Test func dragSelectionCannotJumpToNonAdjacentCell() throws {
+        let viewModel = WordGridViewModel()
+
+        viewModel.selectCellDuringDrag(try cell(at: 0, in: viewModel))
+        viewModel.selectCellDuringDrag(try cell(at: 15, in: viewModel))
+
+        #expect(viewModel.currentWord == "C")
+    }
+
     private func cell(
         at index: Int,
         in viewModel: WordGridViewModel
