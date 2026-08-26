@@ -6,6 +6,38 @@ struct WordGridView: View {
 
     var body: some View {
         VStack(spacing: 24) {
+            HStack {
+                VStack(
+                    alignment: .leading,
+                    spacing: 2
+                ) {
+                    Text("SCORE")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+
+                    Text("\(viewModel.score)")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                }
+
+                Spacer()
+
+                VStack(
+                    alignment: .trailing,
+                    spacing: 2
+                ) {
+                    Text("WORDS")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+
+                    Text(
+                        "\(viewModel.submittedWords.count)"
+                    )
+                    .font(.title2)
+                    .fontWeight(.bold)
+                }
+            }
+
             VStack(spacing: 6) {
                 Text("Build a Word")
                     .font(.title2)
@@ -60,20 +92,53 @@ struct WordGridView: View {
                 )
             }
 
-            if let lastWord =
-                viewModel.submittedWords.last {
-                Text(
-                    "Submitted: \(lastWord)"
-                )
+            submissionFeedback
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
-            }
 
             Spacer()
         }
         .padding()
         .navigationTitle("Word Grid")
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    @ViewBuilder
+    private var submissionFeedback: some View {
+        switch viewModel.lastSubmissionResult {
+        case .accepted(
+            let word,
+            let points
+        ):
+            Label(
+                "\(word)  +\(points)",
+                systemImage: "checkmark.circle.fill"
+            )
+            .foregroundStyle(.green)
+
+        case .tooShort:
+            Label(
+                "Words must be at least 3 letters.",
+                systemImage: "exclamationmark.circle"
+            )
+            .foregroundStyle(.orange)
+
+        case .invalidWord:
+            Label(
+                "Not a valid word.",
+                systemImage: "xmark.circle"
+            )
+            .foregroundStyle(.red)
+
+        case .alreadyFound:
+            Label(
+                "Already found.",
+                systemImage: "arrow.counterclockwise.circle"
+            )
+            .foregroundStyle(.orange)
+
+        case nil:
+            EmptyView()
+        }
     }
 }
 

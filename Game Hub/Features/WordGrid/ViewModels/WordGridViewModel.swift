@@ -7,11 +7,30 @@ final class WordGridViewModel {
 
     var selectedCellIDs: [UUID] = []
     var submittedWords: [String] = []
+    var score = 0
+
+    var lastSubmissionResult:
+        WordGridSubmissionResult?
+
+    private let dictionary: any WordGridDictionary
 
     init(
-        game: WordGridGame = WordGridBoardLibrary.testBoard
+        dictionary: any WordGridDictionary =
+            WordGridBundledDictionary()
+    ) {
+        self.dictionary = dictionary
+        self.game =
+            WordGridBoardGenerator.randomPlayableGame(
+                dictionary: dictionary
+            )
+    }
+
+    init(
+        game: WordGridGame,
+        dictionary: any WordGridDictionary
     ) {
         self.game = game
+        self.dictionary = dictionary
     }
 
     var selectedCells: [WordGridCell] {
@@ -81,11 +100,36 @@ final class WordGridViewModel {
     }
 
     func submitCurrentWord() {
-        guard !currentWord.isEmpty else {
+        let word = currentWord.uppercased()
+
+        guard word.count >= 3 else {
+            lastSubmissionResult = .tooShort
+            clearSelection()
             return
         }
 
-        submittedWords.append(currentWord)
+        guard dictionary.contains(word) else {
+            lastSubmissionResult = .invalidWord
+            clearSelection()
+            return
+        }
+
+        guard !submittedWords.contains(word) else {
+            lastSubmissionResult = .alreadyFound
+            clearSelection()
+            return
+        }
+
+        let points = scoreForWord(word)
+
+        submittedWords.append(word)
+        score += points
+
+        lastSubmissionResult = .accepted(
+            word: word,
+            points: points
+        )
+
         clearSelection()
     }
 
@@ -107,5 +151,29 @@ final class WordGridViewModel {
         return rowDistance <= 1 &&
             columnDistance <= 1 &&
             !(rowDistance == 0 && columnDistance == 0)
+    }
+
+    private func scoreForWord(
+        _ word: String
+    ) -> Int {
+        switch word.count {
+        case 0...2:
+            return 0
+
+        case 3...4:
+            return 1
+
+        case 5:
+            return 2
+
+        case 6:
+            return 3
+
+        case 7:
+            return 5
+
+        default:
+            return 11
+        }
     }
 }
