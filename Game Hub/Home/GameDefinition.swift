@@ -26,12 +26,12 @@ extension GameDefinition {
         availability: .available
     )
 
-    static let wordGame = GameDefinition(
-        id: "word-game",
-        title: "Word Game",
-        subtitle: "Coming soon",
-        systemImage: "textformat.abc",
-        availability: .comingSoon
+    static let wordGrid = GameDefinition(
+        id: "word-grid",
+        title: "Word Grid",
+        subtitle: "Build words from adjacent letters",
+        systemImage: "square.grid.3x3.fill",
+        availability: .available
     )
 
     static let hangman = GameDefinition(
@@ -52,8 +52,8 @@ extension GameDefinition {
 
     static let allGames: [GameDefinition] = [
         .sudoku,
-        .wordGame,
         .hangman,
+        .wordGrid,
         .numberGame
     ]
 }

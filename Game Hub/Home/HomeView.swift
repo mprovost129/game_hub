@@ -213,6 +213,16 @@ struct HomeView: View {
             }
             .buttonStyle(.plain)
 
+        case GameDefinition.wordGrid.id:
+            NavigationLink {
+                WordGridStartView()
+            } label: {
+                GameCardView(
+                    game: game
+                )
+            }
+            .buttonStyle(.plain)
+
         default:
             GameCardView(
                 game: game
