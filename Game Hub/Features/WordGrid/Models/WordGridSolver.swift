@@ -39,6 +39,12 @@ enum WordGridSolver {
         let newWord =
             currentWord + String(cell.letter)
 
+        guard dictionary.containsPrefix(
+            newWord
+        ) else {
+            return
+        }
+
         if newWord.count >= 3,
            dictionary.contains(newWord) {
             results.insert(newWord)

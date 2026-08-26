@@ -2,6 +2,7 @@ import Foundation
 
 struct WordGridBundledDictionary: WordGridDictionary {
     private let words: Set<String>
+    private let prefixes: Set<String>
 
     init(
         resourceName: String = "wordgrid_words"
@@ -14,13 +15,14 @@ struct WordGridBundledDictionary: WordGridDictionary {
             let contents = try? String(
                 contentsOf: url,
                 encoding: .utf8
-            )
+        )
         else {
             self.words = []
+            self.prefixes = []
             return
         }
 
-        self.words = Set(
+        let normalizedWords = Set(
             contents
                 .split(whereSeparator: \.isNewline)
                 .map {
@@ -34,6 +36,18 @@ struct WordGridBundledDictionary: WordGridDictionary {
                     $0.count >= 3
                 }
         )
+
+        self.words = normalizedWords
+
+        self.prefixes = Set(
+            normalizedWords.flatMap { word in
+                (1...word.count).map { length in
+                    String(
+                        word.prefix(length)
+                    )
+                }
+            }
+        )
     }
 
     func contains(
@@ -41,6 +55,14 @@ struct WordGridBundledDictionary: WordGridDictionary {
     ) -> Bool {
         words.contains(
             word.uppercased()
+        )
+    }
+
+    func containsPrefix(
+        _ prefix: String
+    ) -> Bool {
+        prefixes.contains(
+            prefix.uppercased()
         )
     }
 }

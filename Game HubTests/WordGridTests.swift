@@ -217,6 +217,31 @@ struct WordGridTests {
         #expect(dictionary.contains("PET"))
     }
 
+    @Test func localDictionaryTracksWordsAndPrefixesSeparately() {
+        let dictionary =
+            LocalWordGridDictionary(
+                words: [
+                    "CAT",
+                    "CATS",
+                    "CARE",
+                    "DOG"
+                ]
+            )
+
+        #expect(dictionary.contains("CAT"))
+        #expect(!dictionary.contains("CA"))
+
+        #expect(dictionary.containsPrefix("C"))
+        #expect(dictionary.containsPrefix("CA"))
+        #expect(dictionary.containsPrefix("CAT"))
+        #expect(dictionary.containsPrefix("CATS"))
+        #expect(dictionary.containsPrefix("CAR"))
+        #expect(dictionary.containsPrefix("CARE"))
+
+        #expect(!dictionary.containsPrefix("CX"))
+        #expect(!dictionary.containsPrefix("Z"))
+    }
+
     @Test func solverFindsValidWordsOnTestBoard() {
         let words = WordGridSolver.findWords(
             in: WordGridBoardLibrary.testBoard,
